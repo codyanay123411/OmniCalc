@@ -1,0 +1,58 @@
+name: Build OmniCalc (Android APK + Windows zip)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Put the web app inside the Android project
+        run: cp index.html android/app/src/main/assets/index.html
+
+      - name: Build APK
+        run: gradle -p android assembleRelease --no-daemon
+
+      - name: Package files
+        run: |
+          mkdir -p dist/OmniCalc
+          cp android/app/build/outputs/apk/release/app-release.apk dist/OmniCalc.apk
+          cp index.html dist/OmniCalc/OmniCalc.html
+          cp windows/* dist/OmniCalc/
+          (cd dist && zip -qr OmniCalc-Windows.zip OmniCalc)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OmniCalc
+          path: |
+            dist/OmniCalc.apk
+            dist/OmniCalc-Windows.zip
+
+      - name: Publish a release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: OmniCalc 1.0.${{ github.run_number }}
+          make_latest: true
+          body: |
+            **Android:** download `OmniCalc.apk` on your phone and open it (allow "install unknown apps" for your browser or Files app if asked).
+            **Windows / Mac:** download `OmniCalc-Windows.zip`, extract it, and double-click `OmniCalc.html` (or run `Install OmniCalc.cmd` on Windows).
+          files: |
+            dist/OmniCalc.apk
+            dist/OmniCalc-Windows.zip
