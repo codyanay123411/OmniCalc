@@ -290,9 +290,14 @@ html.phone .card{padding:14px}
 html.phone table{display:block;overflow-x:auto}
 html.phone .geodiag{height:210px}
 /* "More" sheet */
-.moresheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}
-.moresheet .sheet{width:100%;max-height:85dvh;overflow:auto;background:var(--panel);border-radius:18px 18px 0 0;padding:8px 14px calc(18px + env(safe-area-inset-bottom))}
-.grabber{width:40px;height:5px;border-radius:3px;background:var(--panel3);margin:4px auto 6px}
+.moresheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0);display:flex;align-items:flex-end;cursor:pointer;transition:background .2s;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.moresheet.in{background:rgba(0,0,0,.5)}.moresheet.closing{background:rgba(0,0,0,0)}
+.moresheet .sheet{width:100%;max-height:calc(88dvh - 64px);overflow:auto;overscroll-behavior:contain;background:var(--panel);border-radius:18px 18px 0 0;padding:0 14px 16px;cursor:auto;transform:translateY(100%);transition:transform .22s ease;box-shadow:0 -8px 30px rgba(0,0,0,.35)}
+.moresheet.in .sheet{transform:none}
+.shead{position:sticky;top:0;z-index:1;background:var(--panel);display:flex;justify-content:center;align-items:center;padding:10px 0 6px;touch-action:none;cursor:grab}
+.grabber{width:44px;height:5px;border-radius:3px;background:var(--faint)}
+.shclose{position:absolute;right:0;top:6px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:15px;cursor:pointer}
+html.phone #tabbar{z-index:55}
 .mgroup{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin:14px 2px 8px}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .mitem{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12px}
@@ -5353,7 +5358,7 @@ const tabBar = el("div", { id: "tabbar" });
 PHONE_TABS.forEach((id) => {
   const label = TABS.find((t) => t[0] === id)[1];
   const b = el("button", { className: "tab btab" }, `<svg viewBox="0 0 24 24">${ICON[id]}</svg><span>${id === "calc" ? "Calc" : id === "conv" ? "Convert" : label}</span>`);
-  b.dataset.v = id; b.onclick = () => show(id); tabBar.appendChild(b);
+  b.dataset.v = id; b.onclick = () => { closeMore(false); show(id); }; tabBar.appendChild(b);
 });
 const moreBtn = el("button", { className: "tab btab more" }, `<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span>`);
 moreBtn.onclick = () => openMore();
@@ -5361,15 +5366,24 @@ tabBar.appendChild(moreBtn);
 document.querySelector(".app").prepend(phoneBar);
 document.body.appendChild(tabBar);
 
+function closeMore(animate = true) {
+  const ov = document.querySelector(".moresheet"); if (!ov) return;
+  moreBtn.classList.remove("open");
+  if (!animate) return ov.remove();
+  ov.classList.add("closing"); const sh = ov.querySelector(".sheet"); sh.style.transform = "translateY(100%)";
+  setTimeout(() => ov.remove(), 220);
+}
 function openMore() {
-  if (document.querySelector(".moresheet")) return;
+  if (document.querySelector(".moresheet")) return closeMore(); // tapping More again closes it
   const ov = el("div", { className: "moresheet" }), sh = el("div", { className: "sheet" });
+  const head = el("div", { className: "shead" }, '<div class="grabber"></div>');
+  const x = el("button", { className: "shclose", title: "Close", "aria-label": "Close" }, "✕");
+  x.onclick = () => closeMore(); head.appendChild(x); sh.appendChild(head);
   let group = "";
-  sh.appendChild(el("div", { className: "grabber" }));
   TABS.forEach(([id, label, g]) => {
     if (g && g !== group) { group = g; sh.appendChild(el("div", { className: "mgroup" }, g)); sh.appendChild(el("div", { className: "mgrid" })); }
     const b = el("button", { className: "mitem" + (id === curView ? " on" : "") }, `<svg viewBox="0 0 24 24">${ICON[id]}</svg><span>${label}</span>`);
-    b.onclick = () => { close(); show(id); };
+    b.onclick = () => { closeMore(false); show(id); };
     sh.lastChild.appendChild(b);
   });
   sh.appendChild(el("div", { className: "mgroup" }, "Settings"));
@@ -5377,13 +5391,33 @@ function openMore() {
   const th = el("button", { className: "btn" }, document.documentElement.classList.contains("light") ? "Dark mode" : "Light mode");
   th.onclick = () => { themeBtn.click(); th.textContent = document.documentElement.classList.contains("light") ? "Dark mode" : "Light mode"; };
   const pc = el("button", { className: "btn" }, "Switch to PC layout");
-  pc.onclick = () => { close(); setDevice("pc"); };
+  pc.onclick = () => { closeMore(false); setDevice("pc"); };
   const st = el("button", { className: "btn" }, "Self-test");
-  st.onclick = () => { close(); testBtn.click(); };
+  st.onclick = () => { closeMore(false); testBtn.click(); };
   row.append(th, pc, st); sh.appendChild(row);
   ov.appendChild(sh); document.body.appendChild(ov);
-  const close = () => ov.remove();
-  ov.onclick = (e) => { if (e.target === ov) close(); };
+  moreBtn.classList.add("open");
+  requestAnimationFrame(() => ov.classList.add("in"));
+  // tap the dimmed area to close (pointer events — iPhone doesn't send clicks to plain divs)
+  ov.addEventListener("pointerup", (e) => { if (e.target === ov) closeMore(); });
+  // swipe down to close: from the handle anywhere, or from the list when it's scrolled to the top
+  let y0 = null, dy = 0, t0 = 0;
+  const start = (e) => { const t = e.touches ? e.touches[0] : e; if (!head.contains(e.target) && sh.scrollTop > 0) return; y0 = t.clientY; dy = 0; t0 = Date.now(); };
+  const move = (e) => {
+    if (y0 === null) return; const t = e.touches ? e.touches[0] : e; dy = t.clientY - y0;
+    if (dy <= 0) { sh.style.transform = ""; return; }
+    if (e.cancelable) e.preventDefault();
+    sh.style.transition = "none"; sh.style.transform = `translateY(${dy}px)`;
+  };
+  const end = () => {
+    if (y0 === null) return; y0 = null; sh.style.transition = "";
+    const fast = dy > 40 && Date.now() - t0 < 250;
+    if (dy > Math.min(140, sh.offsetHeight * 0.25) || fast) closeMore(); else sh.style.transform = "";
+  };
+  sh.addEventListener("touchstart", start, { passive: true });
+  sh.addEventListener("touchmove", move, { passive: false });
+  sh.addEventListener("touchend", end); sh.addEventListener("touchcancel", end);
+  head.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") { start(e); const mm = (ev) => move(ev), mu = () => { end(); removeEventListener("pointermove", mm); removeEventListener("pointerup", mu); }; addEventListener("pointermove", mm); addEventListener("pointerup", mu); } });
 }
 
 function paintPhoneBar(id = curView) {
@@ -5475,7 +5509,7 @@ afterShow = function (id) {
 };
 addEventListener("popstate", (e) => {
   const sheet = document.querySelector(".moresheet");
-  if (sheet) { sheet.remove(); try { history.pushState({ oc: curView }, ""); } catch (er) {} return; }
+  if (sheet) { closeMore(); try { history.pushState({ oc: curView }, ""); } catch (er) {} return; }
   if (e.state && e.state.oc && e.state.oc !== curView) { popping = true; show(e.state.oc); popping = false; }
 });
 try { history.replaceState({ oc: store.tab || "calc" }, ""); } catch (e) {}
@@ -5676,7 +5710,13 @@ async function runSelfTest() {
     [...items].find((b) => b.textContent === "Rifle").click(); await tick();
     check("Layout", "More → Rifle opens it", curView === "rifle" && !document.querySelector(".moresheet") && document.querySelector("#phonebar .pbtitle").textContent === "Rifle", true);
     check("Layout", "More tab highlighted for tools under More", document.querySelector("#tabbar .more").classList.contains("active"), true);
+    openMore(); await tick(); document.querySelector("#tabbar .more").click(); await new Promise((r) => setTimeout(r, 260));
+    check("Layout", "tapping More again closes the menu", !document.querySelector(".moresheet"), true);
+    openMore(); await tick(); document.querySelector(".moresheet .shclose").click(); await new Promise((r) => setTimeout(r, 260));
+    check("Layout", "close button closes the menu", !document.querySelector(".moresheet"), true);
+    openMore(); await tick();
     document.querySelector('#tabbar .tab[data-v="study"]').click(); await tick();
+    check("Layout", "tapping a bottom tab closes the menu", !document.querySelector(".moresheet"), true);
     check("Layout", "bottom bar → Study", curView, "study");
     setDevice("pc", false); await tick();
     check("Layout", "PC mode restores sidebar", !isPhone() && getComputedStyle($("nav")).display !== "none" && exprEl.inputMode === "text", true);
