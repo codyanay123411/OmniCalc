@@ -72,7 +72,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir site
-          cp -r index.html manifest.webmanifest sw.js icons site/
+          cp -r index.html manifest.webmanifest sw.js icons vault site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

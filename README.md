@@ -23,3 +23,6 @@ Everything runs on your device; nothing is sent anywhere. The **Self-test** butt
 - `android/`: a small WebView wrapper. GitHub Actions copies `index.html` in and builds the APK on every push to `main` (see `.github/workflows/build.yml`).
 - `manifest.webmanifest`, `sw.js`, `icons/`: make the GitHub Pages site installable and offline (iPhone Add to Home Screen, Android/Chrome Install app).
 - `windows/`: install/uninstall and default-calculator scripts bundled into the Windows zip.
+
+## Vault (password manager)
+A separate app in `vault/`, live at `https://codyanay123411.github.io/OmniCalc/vault/`: encrypted logins, cards and notes, 2FA codes, passkey unlock, NordPass import, and optional sync through a private GitHub repo. Everything is encrypted on the device (AES-256-GCM, PBKDF2 600k); this public repo only holds the app's code, never anyone's data.

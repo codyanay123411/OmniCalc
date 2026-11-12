@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob: mediastream:; connect-src https://api.github.com https://api.pwnedpasswords.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0e1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vault">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Vault</title>
+<style>
+:root{--bg:#0e1014;--panel:#161a21;--panel2:#1c212a;--panel3:#262c37;--line:#2a313d;--text:#e8ecf2;--muted:#9aa4b2;--faint:#5d6776;--accent:#5b9dff;--accent-soft:rgba(91,157,255,.14);--good:#3ecf8e;--bad:#ff6b6b;--warn:#f5b041;--mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--r:14px}
+html.light{--bg:#eef0f4;--panel:#fff;--panel2:#f5f6f9;--panel3:#e7eaf0;--line:#dde1e8;--text:#14171c;--muted:#5c6573;--faint:#9aa1ad;--accent-soft:rgba(91,157,255,.13)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.hidden{display:none !important}
+.muted{color:var(--muted)}.small{font-size:12.5px}.mono{font-family:var(--mono)}
+.in{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+.in:focus{border-color:var(--accent)}
+textarea.in{resize:vertical;min-height:90px}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.danger{color:var(--bad)}
+.btn.sm{min-height:32px;padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.ib{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;display:inline-grid;place-items:center;flex:none;color:var(--muted)}
+.ib:hover{color:var(--text)}
+.ib svg,.nav svg,.tb svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+h1{font-size:22px;margin:0 0 6px}h2{font-size:18px;margin:0 0 10px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 8px}
+
+/* ---- full-screen gates (setup / unlock) ---- */
+.gate{min-height:100%;display:grid;place-items:center;padding:20px}
+.gate .card{width:min(440px,100%)}
+.logo{width:54px;height:54px;border-radius:16px;background:var(--accent);display:grid;place-items:center;margin:0 auto 12px}
+.logo svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.choice{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.choice .btn{justify-content:flex-start;text-align:left;padding:14px;flex-direction:column;align-items:flex-start;white-space:normal}
+.choice .btn b{font-size:15px}.choice .btn span{color:var(--muted);font-size:13px;font-weight:400}
+.meter{height:6px;border-radius:3px;background:var(--panel3);overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;transition:width .2s}
+
+/* ---- app shell ---- */
+.app{display:flex;height:100vh;height:100dvh;overflow:hidden}
+.nav{width:210px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;padding:2px 8px 14px}
+.brand .lg{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center}.brand .lg svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.2}
+.nav button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:0;background:none;color:var(--muted);cursor:pointer;text-align:left;width:100%}
+.nav button:hover{background:var(--panel2);color:var(--text)}
+.nav button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav .cnt{margin-left:auto;font-size:12px;color:var(--faint)}
+.nav .grp{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);padding:12px 10px 4px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.top .search{flex:1;max-width:520px}
+.syncdot{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.syncdot i{width:8px;height:8px;border-radius:50%;background:var(--faint)}.syncdot.ok i{background:var(--good)}.syncdot.busy i{background:var(--warn)}.syncdot.bad i{background:var(--bad)}
+.body{flex:1;min-height:0;display:flex}
+.list{width:360px;flex:none;border-right:1px solid var(--line);overflow-y:auto}
+.detail{flex:1;min-width:0;overflow-y:auto;padding:20px}
+.page{flex:1;overflow-y:auto;padding:20px}
+.page .card{max-width:760px;margin-bottom:14px}
+.it{display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.it:hover{background:var(--panel2)}.it.on{background:var(--accent-soft)}
+.av{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:15px}
+.it .t{min-width:0;flex:1}.it .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.it .t span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.star{color:var(--warn)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.fld{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px}
+.fld .r{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}.fld .r:first-child{border-top:0}
+.fld .k{font-size:12px;color:var(--muted);margin-bottom:2px}.fld .v{font-family:var(--mono);word-break:break-all;font-size:15px}
+.fld .r>div:first-child{flex:1;min-width:0}
+.code{font-family:var(--mono);font-size:30px;letter-spacing:3px;font-weight:600}
+.ring{width:30px;height:30px;flex:none}
+.dhead{display:flex;align-items:center;gap:14px;margin-bottom:16px}.dhead .av{width:52px;height:52px;font-size:22px;border-radius:14px}
+.dhead h1{margin:0;word-break:break-word}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:var(--panel3);color:var(--muted)}
+.tag.bad{background:rgba(255,107,107,.15);color:var(--bad)}.tag.warn{background:rgba(245,176,65,.15);color:var(--warn)}.tag.good{background:rgba(62,207,142,.15);color:var(--good)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--panel3);color:var(--text);padding:10px 16px;border-radius:12px;z-index:90;box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:70;display:grid;place-items:center;padding:16px}
+.modal .card{width:min(560px,100%);max-height:92dvh;overflow-y:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.pwrow{display:flex;gap:6px}.pwrow .in{flex:1;font-family:var(--mono)}
+.gen{font-family:var(--mono);font-size:20px;word-break:break-all;padding:14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);margin:10px 0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;border-bottom:1px solid var(--line)}
+.chip{border:1px solid var(--line);background:var(--panel2);border-radius:20px;padding:6px 12px;white-space:nowrap;cursor:pointer;font-size:13px;color:var(--muted)}.chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.tb{display:none}
+.back{display:none}
+table.prev{width:100%;border-collapse:collapse;font-size:13px}table.prev td,table.prev th{text-align:left;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.steps{line-height:1.7;padding-left:20px;margin:6px 0}
+video.scan{width:100%;border-radius:12px;background:#000}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-width:760px;margin-bottom:14px}
+.stat{padding:14px}.stat b{display:block;font-size:26px}
+/* ---- phone ---- */
+@media (max-width:760px){
+  .nav{display:none}
+  .top{padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
+  .top .label{display:none}
+  .list{width:100%;border-right:0;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .detail{position:fixed;inset:0;z-index:30;background:var(--bg);padding:calc(14px + env(safe-area-inset-top)) 14px calc(90px + env(safe-area-inset-bottom))}
+  .detail.empty-d{display:none}
+  .back{display:inline-grid}
+  .page{padding:14px 12px calc(90px + env(safe-area-inset-bottom))}
+  .tb{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tb button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--muted);font-size:11px;padding:6px 0;border-radius:12px;cursor:pointer}
+  .tb button.on{color:var(--accent);background:var(--accent-soft)}
+  .tb svg{width:22px;height:22px}
+  .grid2{grid-template-columns:1fr}
+  input,select,textarea{font-size:16px !important}
+  .modal{align-items:end;padding:0}
+  .modal .card{border-radius:18px 18px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  html.typing .tb{display:none}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// =====================================================================
+// Vault core: crypto, TOTP, CSV import, merge, generator. No DOM.
+// =====================================================================
+const enc = new TextEncoder(), dec = new TextDecoder();
+const SUB = crypto.subtle;
+const KDF_ITER = 600000; // PBKDF2-SHA256, OWASP-recommended minimum
+
+// ---------- byte helpers ----------
+const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+const b64 = (u8) => { let s = ""; const a = new Uint8Array(u8); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const b64url = (u8) => b64(u8).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64url = (s) => unb64(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+const uid = () => b64url(rand(12));
+
+// ---------- keys ----------
+async function deriveKEK(password, salt, iter = KDF_ITER) {
+  const base = await SUB.importKey("raw", enc.encode(password.normalize("NFKC")), "PBKDF2", false, ["deriveKey"]);
+  return SUB.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function hkdfKey(secret, info) {
+  const base = await SUB.importKey("raw", secret, "HKDF", false, ["deriveKey"]);
+  return SUB.deriveKey({ name: "HKDF", hash: "SHA-256", salt: new Uint8Array(32), info: enc.encode(info) }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+const importVK = (raw) => SUB.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+async function seal(key, bytes, aad = "vault") {
+  const iv = rand(12);
+  const ct = await SUB.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(aad) }, key, bytes);
+  return { iv: b64(iv), ct: b64(new Uint8Array(ct)) };
+}
+async function open_(key, box, aad = "vault") {
+  const pt = await SUB.decrypt({ name: "AES-GCM", iv: unb64(box.iv), additionalData: enc.encode(aad) }, key, unb64(box.ct));
+  return new Uint8Array(pt);
+}
+
+// ---------- vault file ----------
+// { v:1, kdf:{iter,salt}, wpw:{iv,ct}, pk:[{id,salt,iv,ct,label,added}], data:{iv,ct}, rev, updated }
+// The vault key (VK) is random and never changes; the master password / passkeys only wrap it.
+async function createVault(password) {
+  const vkRaw = rand(32), salt = rand(16);
+  const kek = await deriveKEK(password, salt);
+  const file = { v: 1, kdf: { alg: "PBKDF2-SHA256", iter: KDF_ITER, salt: b64(salt) }, wpw: await seal(kek, vkRaw, "vk"), pk: [], data: null, rev: 0, updated: Date.now() };
+  const vk = await importVK(vkRaw);
+  const state = { items: [], tomb: {}, settings: {} };
+  file.data = await seal(vk, enc.encode(JSON.stringify(state)));
+  return { file, vk, vkRaw, state };
+}
+async function unlockWithPassword(file, password) {
+  const kek = await deriveKEK(password, unb64(file.kdf.salt), file.kdf.iter);
+  let vkRaw;
+  try { vkRaw = await open_(kek, file.wpw, "vk"); } catch (e) { throw new Error("Wrong master password"); }
+  return finishUnlock(file, vkRaw);
+}
+async function finishUnlock(file, vkRaw) {
+  const vk = await importVK(vkRaw);
+  const state = JSON.parse(dec.decode(await open_(vk, file.data)));
+  state.items = state.items || []; state.tomb = state.tomb || {}; state.settings = state.settings || {};
+  return { vk, vkRaw, state };
+}
+async function sealState(file, vk, state) {
+  return Object.assign({}, file, { data: await seal(vk, enc.encode(JSON.stringify(state))), updated: Date.now() });
+}
+async function changePassword(file, vkRaw, newPassword) {
+  const salt = rand(16), kek = await deriveKEK(newPassword, salt);
+  return Object.assign({}, file, { kdf: { alg: "PBKDF2-SHA256", iter: KDF_ITER, salt: b64(salt) }, wpw: await seal(kek, vkRaw, "vk"), updated: Date.now() });
+}
+
+// ---------- passkey unlock (WebAuthn PRF) ----------
+const passkeysPossible = () => !!(window.isSecureContext && window.PublicKeyCredential && navigator.credentials && location.protocol === "https:" || location.hostname === "localhost");
+async function addPasskey(file, vkRaw, label) {
+  const salt = rand(32);
+  const cred = await navigator.credentials.create({ publicKey: {
+    rp: { name: "Vault", id: location.hostname },
+    user: { id: rand(16), name: "vault@" + location.hostname, displayName: "Vault" },
+    challenge: rand(32),
+    pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+    authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
+    extensions: { prf: { eval: { first: salt } } },
+  } });
+  const ext = cred.getClientExtensionResults ? cred.getClientExtensionResults() : {};
+  if (!ext.prf || ext.prf.enabled === false) throw new Error("This device's passkeys can't unlock a vault (no PRF support). Use your master password here.");
+  let out = ext.prf.results && ext.prf.results.first;
+  const id = new Uint8Array(cred.rawId);
+  if (!out) out = await prfEval([{ id: b64url(id), salt: b64(salt) }]).then((r) => r.out); // some authenticators only answer on sign-in
+  const wrap = await hkdfKey(new Uint8Array(out), "vault-passkey-wrap");
+  const entry = Object.assign({ id: b64url(id), salt: b64(salt), label: label || "Passkey", added: Date.now() }, await seal(wrap, vkRaw, "vk"));
+  return Object.assign({}, file, { pk: [...(file.pk || []), entry], updated: Date.now() });
+}
+async function prfEval(list) {
+  const evalBy = {}; list.forEach((p) => (evalBy[p.id] = { first: unb64(p.salt) }));
+  const a = await navigator.credentials.get({ publicKey: {
+    challenge: rand(32), userVerification: "required", rpId: location.hostname,
+    allowCredentials: list.map((p) => ({ type: "public-key", id: unb64url(p.id) })),
+    extensions: { prf: { evalByCredential: evalBy } },
+  } });
+  const r = a.getClientExtensionResults().prf;
+  if (!r || !r.results || !r.results.first) throw new Error("That passkey didn't return an unlock key. Use your master password.");
+  return { id: b64url(new Uint8Array(a.rawId)), out: r.results.first };
+}
+async function unlockWithPasskey(file) {
+  if (!file.pk || !file.pk.length) throw new Error("No passkey set up yet");
+  const { id, out } = await prfEval(file.pk);
+  const p = file.pk.find((x) => x.id === id); if (!p) throw new Error("Unknown passkey");
+  const wrap = await hkdfKey(new Uint8Array(out), "vault-passkey-wrap");
+  let vkRaw; try { vkRaw = await open_(wrap, p, "vk"); } catch (e) { throw new Error("That passkey doesn't match this vault"); }
+  return finishUnlock(file, vkRaw);
+}
+
+// ---------- TOTP (RFC 6238) ----------
+function base32(s) {
+  s = String(s).toUpperCase().replace(/[\s=-]/g, "");
+  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; let bits = 0, val = 0; const out = [];
+  for (const ch of s) { const i = A.indexOf(ch); if (i < 0) throw new Error("Not a valid 2FA secret key"); val = (val << 5) | i; bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; } }
+  if (!out.length) throw new Error("Empty 2FA secret");
+  return new Uint8Array(out);
+}
+function parseOtp(input) {
+  // accepts an otpauth:// link or a bare base32 secret
+  input = String(input || "").trim(); if (!input) return null;
+  if (/^otpauth:\/\//i.test(input)) {
+    const u = new URL(input); if (u.host.toLowerCase() !== "totp") throw new Error("Only time-based (TOTP) codes are supported");
+    const q = u.searchParams, label = decodeURIComponent(u.pathname.slice(1));
+    const [iss, acct] = label.includes(":") ? label.split(/:(.*)/s) : [q.get("issuer") || "", label];
+    const o = { secret: q.get("secret"), digits: +(q.get("digits") || 6), period: +(q.get("period") || 30), algo: (q.get("algorithm") || "SHA1").toUpperCase().replace("SHA", "SHA-"), issuer: q.get("issuer") || iss, account: acct };
+    base32(o.secret); return o;
+  }
+  base32(input); return { secret: input.replace(/\s/g, "").toUpperCase(), digits: 6, period: 30, algo: "SHA-1" };
+}
+async function totp(otp, t = Date.now()) {
+  const o = typeof otp === "string" ? parseOtp(otp) : otp;
+  const key = await SUB.importKey("raw", base32(o.secret), { name: "HMAC", hash: o.algo || "SHA-1" }, false, ["sign"]);
+  const ctr = Math.floor(t / 1000 / (o.period || 30)), msg = new Uint8Array(8);
+  let c = ctr; for (let i = 7; i >= 0; i--) { msg[i] = c & 255; c = Math.floor(c / 256); }
+  const h = new Uint8Array(await SUB.sign("HMAC", key, msg)), off = h[h.length - 1] & 15;
+  const bin = ((h[off] & 127) << 24) | (h[off + 1] << 16) | (h[off + 2] << 8) | h[off + 3];
+  return String(bin % 10 ** (o.digits || 6)).padStart(o.digits || 6, "0");
+}
+
+// ---------- CSV ----------
+function parseCSV(text) {
+  text = text.replace(/^﻿/, "");
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  return rows.filter((r) => r.some((x) => x.trim() !== ""));
+}
+const csvCell = (v) => { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+// header aliases: NordPass first, then Chrome / Bitwarden / 1Password / LastPass / generic
+const ALIAS = {
+  name: ["name", "title", "account", "item name"], url: ["url", "website", "website url", "login_uri", "login uri", "urls", "web site"],
+  username: ["username", "user name", "login", "login_username", "email", "user"], password: ["password", "login_password", "pass"],
+  note: ["note", "notes", "comment", "comments", "extra"], folder: ["folder", "group", "grouping", "collection", "category"],
+  totp: ["totp", "login_totp", "otp", "one-time password", "otpauth", "2fa", "authenticator"],
+  cardholder: ["cardholdername", "cardholder name", "card holder", "name on card"], cardnumber: ["cardnumber", "card number", "number"],
+  cvc: ["cvc", "cvv", "security code"], expiry: ["expirydate", "expiry date", "expiration", "expiration date", "expires"], zip: ["zipcode", "zip", "postal code"],
+};
+function importCSV(text, now = Date.now()) {
+  const rows = parseCSV(text); if (rows.length < 2) throw new Error("That file has no rows to import");
+  const head = rows[0].map((h) => h.trim().toLowerCase()), col = {};
+  for (const [k, names] of Object.entries(ALIAS)) { const i = head.findIndex((h) => names.includes(h)); if (i >= 0) col[k] = i; }
+  if (col.password === undefined && col.cardnumber === undefined && col.note === undefined) throw new Error("Couldn't find a password column — is this a password export?");
+  const items = [], skipped = []; const extraCols = head.map((h, i) => i).filter((i) => !Object.values(col).includes(i));
+  rows.slice(1).forEach((r, n) => {
+    const g = (k) => (col[k] !== undefined ? (r[col[k]] || "").trim() : "");
+    const name = g("name"), url = g("url"), user = g("username"), pw = r[col.password] !== undefined ? r[col.password] : "", note = g("note"), num = g("cardnumber");
+    const extras = extraCols.map((i) => [rows[0][i], (r[i] || "").trim()]).filter(([, v]) => v);
+    const base = { id: uid(), name: name || hostOf(url) || user || "Untitled", folder: g("folder"), notes: note, fav: false, created: now, updated: now, pwChanged: now };
+    if (num) items.push(Object.assign(base, { type: "card", cardholder: g("cardholder"), number: num, cvc: g("cvc"), expiry: g("expiry"), zip: g("zip") }));
+    else if (url || user || pw) {
+      const it = Object.assign(base, { type: "login", url, username: user, password: pw, totp: "" });
+      const t = g("totp"); if (t) { try { parseOtp(t); it.totp = t; } catch (e) { it.notes = (it.notes ? it.notes + "\n" : "") + "2FA key (couldn't read): " + t; } }
+      items.push(it);
+    } else if (note || extras.length) items.push(Object.assign(base, { type: "note", notes: [note, ...extras.map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join("\n") }));
+    else skipped.push(n + 2); // NordPass writes a row per folder with only a name — nothing to import
+  });
+  return { items, skipped };
+}
+function exportCSV(items) {
+  const H = ["name", "url", "username", "password", "totp", "note", "folder", "type", "cardholdername", "cardnumber", "cvc", "expirydate", "zipcode"];
+  return [H.join(","), ...items.map((i) => [i.name, i.url, i.username, i.password, i.totp, i.notes, i.folder, i.type, i.cardholder, i.number, i.cvc, i.expiry, i.zip].map(csvCell).join(","))].join("\r\n");
+}
+function hostOf(url) { try { return new URL(/^[a-z]+:\/\//i.test(url) ? url : "https://" + url).hostname.replace(/^www\./, ""); } catch (e) { return ""; } }
+// duplicate = same type + same site + same username (+ same card number)
+const dupKey = (i) => [i.type, hostOf(i.url || ""), (i.username || "").toLowerCase(), i.number || "", i.type === "note" ? i.name + i.notes : ""].join("|");
+
+// ---------- merge (sync) ----------
+// last edit wins per item; deletions are kept as tombstones so they sync too
+function mergeStates(a, b) {
+  const tomb = Object.assign({}, a.tomb); for (const [k, v] of Object.entries(b.tomb || {})) tomb[k] = Math.max(tomb[k] || 0, v);
+  const by = new Map();
+  for (const it of [...a.items, ...(b.items || [])]) { const cur = by.get(it.id); if (!cur || (it.updated || 0) > (cur.updated || 0)) by.set(it.id, it); }
+  const items = [...by.values()].filter((it) => !(tomb[it.id] && tomb[it.id] >= (it.updated || 0)));
+  const settings = (b.settingsUpdated || 0) > (a.settingsUpdated || 0) ? b.settings : a.settings;
+  return { items, tomb, settings, settingsUpdated: Math.max(a.settingsUpdated || 0, b.settingsUpdated || 0) };
+}
+
+// ---------- password generator & strength ----------
+const SETS = { lower: "abcdefghijkmnopqrstuvwxyz", upper: "ABCDEFGHJKLMNPQRSTUVWXYZ", digits: "23456789", symbols: "!@#$%^&*-_=+?.:;" };
+const SETS_FULL = { lower: "abcdefghijklmnopqrstuvwxyz", upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", digits: "0123456789", symbols: "!@#$%^&*()-_=+[]{};:,.<>/?~" };
+function rint(n) { const lim = Math.floor(2 ** 32 / n) * n; let x; do x = crypto.getRandomValues(new Uint32Array(1))[0]; while (x >= lim); return x % n; }
+function genPassword({ length = 20, lower = true, upper = true, digits = true, symbols = true, avoidSimilar = true } = {}) {
+  const S = avoidSimilar ? SETS : SETS_FULL, pools = [lower && S.lower, upper && S.upper, digits && S.digits, symbols && S.symbols].filter(Boolean);
+  if (!pools.length) throw new Error("Pick at least one kind of character");
+  length = Math.max(pools.length, Math.min(128, length | 0));
+  const all = pools.join(""), out = pools.map((p) => p[rint(p.length)]); // at least one of each kind
+  while (out.length < length) out.push(all[rint(all.length)]);
+  for (let i = out.length - 1; i > 0; i--) { const j = rint(i + 1); [out[i], out[j]] = [out[j], out[i]]; }
+  return out.join("");
+}
+const WORDS = ("acid acorn actor adapt agent alarm album alert alley alpha amber anchor angle ankle apple april apron arena armor arrow aspen atlas attic audio autumn avoid award bacon badge bagel baker balmy bamboo banjo barn basil beach beard beaver bench berry bison blade blank blaze bloom blues board bonus boost booth brave bread brick bride brisk brook brush bucket buddy bugle bunny cabin cactus camel candy canoe canyon cargo carol cedar chalk charm chess chili chime cider cinema civic clamp clay cliff cloud clover coach cobra cocoa comet coral couch crane crisp crown crumb curve daisy dance delta denim depot diary diner dingo disco ditch dizzy dodge donut dozen draft dragon drift drum dune eagle easel echo elbow elder ember emoji equal error event fable fancy fern ferry fiber field finch flame flash flint flock flute focus foggy forge fossil frost fruit fudge gamer gecko giant ginger glide globe glove grape gravy grill grove gully habit hammer harbor hatch hazel heron hippo hobby honey hotel husky igloo image index inlet iris ivory jacket jelly jewel jolly judge juice jumbo kayak kettle kiosk kitten koala ladder lagoon lemon lever lilac linen lodge lotus lucky lunar lyric magma mango maple marble medal melon metro mimic mocha model moose mossy motel nacho napkin nectar noble noodle north novel oasis ocean olive omega onion orbit otter oxide paddle panda paper pearl pecan penny piano pilot pixel plaza polar poppy prism pulse puppy quail quartz quest quill radar raven relay rhino ridge river robin rocket rodeo rover ruby saddle salsa sandy scarf scout shark shelf sierra silk siren sketch sleet slope solar sonic spark spice sprout squid stamp steam stone storm sugar sunny swamp syrup taco talon tango thorn tiger toast token topaz torch tower trail tulip tundra turtle umbra unity valve vapor velvet venus vinyl viola vivid waffle walrus wagon whale wheat widget willow wizard yacht yodel yogurt zebra zesty zinc").split(" ");
+function genPassphrase(n = 5, sep = "-") { const w = Array.from({ length: n }, () => WORDS[rint(WORDS.length)]); w[rint(n)] += rint(10); return w.map((x, i) => (i === 0 ? x[0].toUpperCase() + x.slice(1) : x)).join(sep); }
+function strength(pw) {
+  if (!pw) return { bits: 0, label: "Empty", score: 0 };
+  let pool = 0; if (/[a-z]/.test(pw)) pool += 26; if (/[A-Z]/.test(pw)) pool += 26; if (/\d/.test(pw)) pool += 10; if (/[^a-zA-Z0-9]/.test(pw)) pool += 30;
+  let bits = pw.length * Math.log2(Math.max(pool, 2));
+  const uniq = new Set(pw).size; if (uniq < pw.length / 2) bits *= 0.6; // lots of repeats
+  if (/^(?:password|qwerty|letmein|welcome|admin|iloveyou|monkey|dragon|abc123|111111|123456)/i.test(pw) || /(0123|1234|2345|3456|4567|5678|6789|abcd|qwer|asdf)/i.test(pw)) bits = Math.min(bits, 28);
+  if (/^\d+$/.test(pw)) bits = Math.min(bits, pw.length * 3.3);
+  const score = bits < 36 ? 1 : bits < 60 ? 2 : bits < 80 ? 3 : 4;
+  return { bits: Math.round(bits), score, label: ["Empty", "Weak", "Fair", "Strong", "Very strong"][score] };
+}
+async function sha1Hex(s) { return [...new Uint8Array(await SUB.digest("SHA-1", enc.encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase(); }
+// Have I Been Pwned "range" check: only the first 5 characters of the password's SHA-1 hash leave the device
+async function breachCount(pw, fetchImpl = fetch) {
+  const h = await sha1Hex(pw), pre = h.slice(0, 5), suf = h.slice(5);
+  const txt = await (await fetchImpl("https://api.pwnedpasswords.com/range/" + pre, { headers: { "Add-Padding": "true" } })).text();
+  const line = txt.split("\n").find((l) => l.startsWith(suf)); return line ? +line.split(":")[1] : 0;
+}
+
+// ---------- GitHub sync transport ----------
+// File lives in a private repo the user owns; the token never leaves this device except to api.github.com.
+function ghSync(cfg, fetchImpl = (...a) => fetch(...a)) {
+  const api = `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path || "vault.json"}`;
+  const H = { Authorization: "Bearer " + cfg.token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  return {
+    async get() {
+      const r = await fetchImpl(api + "?t=" + Date.now(), { headers: H, cache: "no-store" });
+      if (r.status === 404) return { file: null, sha: null };
+      if (r.status === 401 || r.status === 403) throw new Error("GitHub refused the token. Check it has Contents read & write for this repo.");
+      if (!r.ok) throw new Error("GitHub error " + r.status);
+      const j = await r.json(); let text;
+      if (j.content) text = dec.decode(unb64(j.content.replace(/\n/g, "")));
+      else text = await (await fetchImpl(api, { headers: Object.assign({}, H, { Accept: "application/vnd.github.raw+json" }), cache: "no-store" })).text();
+      return { file: JSON.parse(text), sha: j.sha };
+    },
+    async put(file, sha) {
+      const body = { message: "Vault update " + new Date().toISOString(), content: b64(enc.encode(JSON.stringify(file))) }; if (sha) body.sha = sha;
+      const r = await fetchImpl(api, { method: "PUT", headers: Object.assign({ "Content-Type": "application/json" }, H), body: JSON.stringify(body) });
+      if (r.status === 409 || r.status === 422) return { conflict: true };
+      if (!r.ok) throw new Error("GitHub error " + r.status + " while saving");
+      return { sha: (await r.json()).content.sha };
+    },
+  };
+}
+
+// =====================================================================
+// Vault UI
+// =====================================================================
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, props = {}, html) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(props)) { if (k === "style") e.style.cssText = v; else if (k.startsWith("on")) e[k] = v; else if (k in e && k !== "list") e[k] = v; else e.setAttribute(k, v); } if (html != null) e.innerHTML = html; return e; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const I = {
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  all: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>', card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  note: '<path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h5"/>', otp: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+  gen: '<path d="M4 7h16M4 12h10M4 17h7"/><path d="M17 14l3 3-3 3"/>', health: '<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>', eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  open: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', back: '<path d="M15 5l-7 7 7 7"/>', sync: '<path d="M20 11a8 8 0 0 0-14.8-3.6M4 4v4h4M4 13a8 8 0 0 0 14.8 3.6M20 20v-4h-4"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', dice: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>',
+  more: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>', cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+};
+const svg = (n) => `<svg viewBox="0 0 24 24">${I[n]}</svg>`;
+const root = $("#root");
+
+// ---------- persistence ----------
+const LS_FILE = "vault.file", LS_PREFS = "vault.prefs";
+let FILE = null, S = null; // S = { vk, vkRaw, state }
+const prefs = Object.assign({ autolock: 5, bgLock: 2, theme: "dark" }, JSON.parse(localStorage.getItem(LS_PREFS) || "{}"));
+const savePrefs = () => localStorage.setItem(LS_PREFS, JSON.stringify(prefs));
+const loadFile = () => { try { return JSON.parse(localStorage.getItem(LS_FILE)); } catch (e) { return null; } };
+const writeFile = (f) => { FILE = f; localStorage.setItem(LS_FILE, JSON.stringify(f)); };
+if (prefs.theme === "light") document.documentElement.classList.add("light");
+
+let saveChain = Promise.resolve();
+function persist(syncSoon = true) {
+  S.state.items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  const snapshot = JSON.parse(JSON.stringify(S.state));
+  saveChain = saveChain.then(async () => { writeFile(await sealState(FILE, S.vk, snapshot)); }).catch((e) => toast("Couldn't save: " + e.message));
+  if (syncSoon) scheduleSync();
+  return saveChain;
+}
+
+// ---------- small UI helpers ----------
+let toastT;
+function toast(msg) { document.querySelectorAll(".toast").forEach((t) => t.remove()); const t = el("div", { className: "toast" }, esc(msg)); document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
+let clipT;
+async function copy(text, what = "Copied") {
+  try { await navigator.clipboard.writeText(text); } catch (e) { const t = el("textarea", { value: text, style: "position:fixed;opacity:0" }); document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
+  toast(`${what} — clears from clipboard in 30s`);
+  clearTimeout(clipT); clipT = setTimeout(() => { navigator.clipboard.writeText("").catch(() => {}); }, 30000);
+}
+function modal(build, { wide } = {}) {
+  const ov = el("div", { className: "modal" }), c = el("div", { className: "card" }); if (wide) c.style.width = "min(760px,100%)";
+  ov.appendChild(c); document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.addEventListener("pointerdown", (e) => { if (e.target === ov) ov._down = true; });
+  ov.addEventListener("pointerup", (e) => { if (e.target === ov && ov._down) close(); ov._down = false; });
+  build(c, close); return close;
+}
+const COLORS = ["#5b9dff", "#3ecf8e", "#f5b041", "#ff6b6b", "#b07cff", "#2ec4d6", "#ff8f5b", "#e86fb5"];
+const avatar = (it) => { const s = (it.name || "?").trim(); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return `<div class="av" style="background:${COLORS[Math.abs(h) % COLORS.length]}">${esc((s[0] || "?").toUpperCase())}</div>`; };
+const fmtDate = (t) => (t ? new Date(t).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—");
+function pwField(label, id, value = "", ph = "") {
+  return `<label class="f">${label}<div class="pwrow"><input class="in" id="${id}" type="password" value="${esc(value)}" placeholder="${esc(ph)}" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false"><button type="button" class="ib" data-eye="${id}" title="Show">${svg("eye")}</button></div></label>`;
+}
+function wireEyes(box) { box.querySelectorAll("[data-eye]").forEach((b) => (b.onclick = () => { const i = $("#" + b.dataset.eye, box); i.type = i.type === "password" ? "text" : "password"; })); }
+function meter(pw) { const s = strength(pw), c = ["var(--faint)", "var(--bad)", "var(--warn)", "var(--good)", "var(--good)"][s.score]; return `<div class="meter"><i style="width:${s.score * 25}%;background:${c}"></i></div><div class="small muted" style="margin-top:4px">${s.label}${pw ? ` · about ${s.bits} bits` : ""}</div>`; }
+
+// =====================================================================
+// GATES: first run, unlock
+// =====================================================================
+const LOGO = `<div class="logo"><svg viewBox="0 0 24 24">${I.lock}</svg></div>`;
+function gate(html) { root.innerHTML = `<div class="gate"><div class="card">${html}</div></div>`; return $(".gate .card"); }
+
+function showWelcome() {
+  const c = gate(`${LOGO}<h1 style="text-align:center">Vault</h1><p class="muted" style="text-align:center;margin:0">Your passwords, 2FA codes and cards, encrypted on your devices.</p><div class="choice"></div>`);
+  [["Create a new vault", "Start fresh, then import from NordPass.", showCreate], ["Connect to my synced vault", "Already set up sync on another device? Link this one.", showConnect], ["Restore from a backup file", "Open a .vault.json backup you exported.", showRestore]].forEach(([t, d, f]) => {
+    const b = el("button", { className: "btn" }, `<b>${t}</b><span>${d}</span>`); b.onclick = f; $(".choice", c).appendChild(b);
+  });
+}
+function showCreate() {
+  const c = gate(`${LOGO}<h2 style="text-align:center">Create your master password</h2>
+    <p class="small muted">This one password unlocks everything. <b>It can't be recovered</b> — if you forget it and have no passkey set up, the vault is gone. A long phrase you'll remember beats a short complicated one.</p>
+    ${pwField("Master password", "p1")}<div id="m"></div>${pwField("Type it again", "p2")}<div class="err" id="e"></div>
+    <div class="row"><button class="btn" id="bk">Back</button><span style="flex:1"></span><button class="btn primary" id="go">Create vault</button></div>`);
+  wireEyes(c); const p1 = $("#p1", c), p2 = $("#p2", c);
+  p1.oninput = () => ($("#m", c).innerHTML = meter(p1.value)); p1.oninput(); p1.focus();
+  $("#bk", c).onclick = showWelcome;
+  const go = async () => {
+    const e = $("#e", c);
+    if (p1.value.length < 10) return (e.textContent = "Use at least 10 characters.");
+    if (strength(p1.value).score < 2) return (e.textContent = "Too easy to guess — make it longer or less predictable.");
+    if (p1.value !== p2.value) return (e.textContent = "The two passwords don't match.");
+    $("#go", c).disabled = true; e.textContent = ""; $("#go", c).textContent = "Creating…";
+    const v = await createVault(p1.value); writeFile(v.file); S = { vk: v.vk, vkRaw: v.vkRaw, state: v.state };
+    enterApp(); toast("Vault created"); go2("settings", "import");
+  };
+  $("#go", c).onclick = go; p2.onkeydown = (ev) => ev.key === "Enter" && go();
+}
+function showUnlock(msg) {
+  const hasPk = FILE.pk && FILE.pk.length && passkeysPossible();
+  const c = gate(`${LOGO}<h2 style="text-align:center">Vault is locked</h2>${pwField("Master password", "pw")}<div class="err" id="e">${esc(msg || "")}</div>
+    <button class="btn primary" id="go" style="width:100%">Unlock</button>${hasPk ? `<button class="btn" id="pk" style="width:100%;margin-top:10px">${svg("key")} Unlock with passkey</button>` : ""}`);
+  wireEyes(c); const pw = $("#pw", c), e = $("#e", c);
+  const go = async () => {
+    if (!pw.value) return (e.textContent = "Type your master password.");
+    $("#go", c).disabled = true; $("#go", c).textContent = "Unlocking…"; e.textContent = "";
+    try { S = await unlockWithPassword(FILE, pw.value); enterApp(); }
+    catch (er) { e.textContent = er.message; $("#go", c).disabled = false; $("#go", c).textContent = "Unlock"; pw.select(); }
+  };
+  $("#go", c).onclick = go; pw.onkeydown = (ev) => ev.key === "Enter" && go();
+  if (hasPk) $("#pk", c).onclick = async () => { e.textContent = ""; try { S = await unlockWithPasskey(FILE); enterApp(); } catch (er) { e.textContent = er.name === "NotAllowedError" ? "Passkey cancelled." : er.message; } };
+  if (!matchMedia("(pointer:coarse)").matches) pw.focus();
+}
+function showConnect() {
+  const c = gate(`${LOGO}<h2 style="text-align:center">Connect to your synced vault</h2>
+    <p class="small muted">Use the same repo and token you set up on your other device (Settings → Sync there shows them, except the token).</p>
+    <div class="grid2"><label class="f">GitHub username<input class="in" id="o" autocapitalize="off" autocorrect="off" spellcheck="false" value="codyanay123411"></label><label class="f">Private repo name<input class="in" id="r" autocapitalize="off" autocorrect="off" spellcheck="false" value="vault-data"></label></div>
+    ${pwField("Access token", "t", "", "github_pat_…")}${pwField("Master password", "pw")}<div class="err" id="e"></div>
+    <div class="row"><button class="btn" id="bk">Back</button><span style="flex:1"></span><button class="btn primary" id="go">Connect</button></div>`);
+  wireEyes(c); $("#bk", c).onclick = FILE ? () => showUnlock() : showWelcome;
+  $("#go", c).onclick = async () => {
+    const e = $("#e", c), cfg = { owner: $("#o", c).value.trim(), repo: $("#r", c).value.trim(), path: "vault.json", token: $("#t", c).value.trim() };
+    if (!cfg.owner || !cfg.repo || !cfg.token) return (e.textContent = "Fill in the username, repo and token.");
+    $("#go", c).disabled = true; e.textContent = "Downloading…";
+    try {
+      const { file, sha } = await ghSync(cfg).get();
+      if (!file) throw new Error("No vault found in that repo yet. Set up sync on your other device first.");
+      S = await unlockWithPassword(file, $("#pw", c).value);
+      writeFile(file); prefs.sync = { owner: cfg.owner, repo: cfg.repo, path: cfg.path, tokenBox: await seal(S.vk, enc.encode(cfg.token), "token") }; prefs.sha = sha; prefs.lastSync = Date.now(); savePrefs();
+      enterApp(); toast("Connected — your vault is synced");
+    } catch (er) { e.textContent = er.message; $("#go", c).disabled = false; }
+  };
+}
+function showRestore() {
+  const c = gate(`${LOGO}<h2 style="text-align:center">Restore a backup</h2><label class="f">Backup file (.vault.json)<input class="in" type="file" id="f" accept=".json,application/json"></label>${pwField("Master password for that backup", "pw")}<div class="err" id="e"></div>
+    <div class="row"><button class="btn" id="bk">Back</button><span style="flex:1"></span><button class="btn primary" id="go">Restore</button></div>`);
+  wireEyes(c); $("#bk", c).onclick = showWelcome;
+  $("#go", c).onclick = async () => {
+    const e = $("#e", c), f = $("#f", c).files[0]; if (!f) return (e.textContent = "Pick the backup file.");
+    try { const file = JSON.parse(await f.text()); if (!file.wpw || !file.data) throw new Error("That isn't a Vault backup file."); S = await unlockWithPassword(file, $("#pw", c).value); writeFile(file); enterApp(); toast("Backup restored"); }
+    catch (er) { e.textContent = er.message; }
+  };
+}
+
+// =====================================================================
+// APP
+// =====================================================================
+const VIEWS = [["all", "All items", "all"], ["fav", "Favorites", "star"], ["login", "Logins", "key"], ["otp", "2FA codes", "otp"], ["card", "Cards", "card"], ["note", "Secure notes", "note"], ["gen", "Generator", "gen"], ["health", "Health", "health"], ["settings", "Settings", "gear"]];
+const PHONE_TABS = ["all", "otp", "gen", "health", "settings"];
+let view = "all", folder = null, sel = null, query = "", settingsTab = null;
+let lockTimer, hiddenAt = 0;
+
+function enterApp() {
+  root.innerHTML = `<div class="app"><nav class="nav"></nav><div class="main"><div class="top"><input class="in search" id="q" placeholder="Search vault" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn primary" id="add">${svg("plus")}<span class="label">New</span></button><span class="syncdot" id="sd"><i></i><span class="label"></span></span><button class="ib" id="lk" title="Lock">${svg("lock")}</button></div><div class="body" id="body"></div></div></div><div class="tb"></div>`;
+  $("#q").oninput = (e) => { query = e.target.value.trim().toLowerCase(); if (!["all", "fav", "login", "card", "note", "otp"].includes(view)) view = "all"; renderNav(); renderBody(); };
+  $("#add").onclick = () => editItem(null);
+  $("#lk").onclick = () => lock();
+  $("#sd").onclick = () => syncNow(true);
+  document.addEventListener("focusin", onFocusIn); document.addEventListener("focusout", onFocusOut);
+  renderNav(); renderBody(); armLock(); paintSync();
+  if (prefs.sync) syncNow(false);
+}
+function lock(msg) {
+  S = null; clearTimeout(lockTimer); clearInterval(otpIv); document.querySelectorAll(".modal").forEach((m) => m.remove());
+  sel = null; root.innerHTML = ""; showUnlock(msg);
+}
+function armLock() { clearTimeout(lockTimer); if (S && +prefs.autolock > 0) lockTimer = setTimeout(() => lock("Locked after " + prefs.autolock + " min of no activity."), prefs.autolock * 60000); }
+["pointerdown", "keydown"].forEach((ev) => addEventListener(ev, () => S && armLock(), { passive: true }));
+document.addEventListener("visibilitychange", () => {
+  if (!S) return;
+  if (document.hidden) hiddenAt = Date.now();
+  else if (+prefs.bgLock > 0 && hiddenAt && Date.now() - hiddenAt > prefs.bgLock * 60000) lock("Locked while you were away.");
+  else if (prefs.sync) syncNow(false);
+});
+function onFocusIn(e) { if (/INPUT|TEXTAREA/.test(e.target.tagName) && !/checkbox|range|file/.test(e.target.type)) document.documentElement.classList.add("typing"); }
+function onFocusOut() { setTimeout(() => { const a = document.activeElement; if (!a || !/INPUT|TEXTAREA/.test(a.tagName)) document.documentElement.classList.remove("typing"); }, 60); }
+
+function counts() { const it = S.state.items; return { all: it.length, fav: it.filter((i) => i.fav).length, login: it.filter((i) => i.type === "login").length, card: it.filter((i) => i.type === "card").length, note: it.filter((i) => i.type === "note").length, otp: it.filter((i) => i.totp).length }; }
+function go2(v, sub) { view = v; folder = null; sel = null; if (sub) settingsTab = sub; renderNav(); renderBody(); }
+function renderNav() {
+  const nav = $(".nav"), n = counts(); if (!nav) return;
+  nav.innerHTML = `<div class="brand"><div class="lg"><svg viewBox="0 0 24 24">${I.lock}</svg></div>Vault</div>`;
+  VIEWS.forEach(([id, label, ic], i) => {
+    if (i === 6) nav.appendChild(el("div", { className: "grp" }, "Tools"));
+    const b = el("button", { className: view === id && !folder ? "on" : "" }, `${svg(ic)}${label}${n[id] !== undefined ? `<span class="cnt">${n[id]}</span>` : ""}`);
+    b.onclick = () => go2(id); nav.appendChild(b);
+  });
+  const folders = [...new Set(S.state.items.map((i) => i.folder).filter(Boolean))].sort();
+  if (folders.length) { nav.appendChild(el("div", { className: "grp" }, "Folders")); folders.forEach((f) => { const b = el("button", { className: folder === f ? "on" : "" }, `${svg("all")}${esc(f)}<span class="cnt">${S.state.items.filter((i) => i.folder === f).length}</span>`); b.onclick = () => { view = "all"; folder = f; sel = null; renderNav(); renderBody(); }; nav.appendChild(b); }); }
+  const tb = $(".tb"); tb.innerHTML = "";
+  PHONE_TABS.forEach((id) => { const [, label, ic] = VIEWS.find((v) => v[0] === id); const b = el("button", { className: view === id || (id === "all" && ["fav", "login", "card", "note"].includes(view)) ? "on" : "" }, `${svg(ic)}<span>${id === "all" ? "Vault" : id === "otp" ? "2FA" : label}</span>`); b.onclick = () => go2(id); tb.appendChild(b); });
+}
+function filtered() {
+  let it = S.state.items;
+  if (folder) it = it.filter((i) => i.folder === folder);
+  if (view === "fav") it = it.filter((i) => i.fav); else if (["login", "card", "note"].includes(view)) it = it.filter((i) => i.type === view); else if (view === "otp") it = it.filter((i) => i.totp);
+  if (query) it = it.filter((i) => [i.name, i.url, i.username, i.folder, i.notes, i.cardholder].some((v) => (v || "").toLowerCase().includes(query)));
+  return it;
+}
+function subtitle(i) { return i.type === "card" ? (i.number ? "•••• " + i.number.replace(/\D/g, "").slice(-4) : "Card") : i.type === "note" ? (i.notes || "").split("\n")[0] : i.username || hostOf(i.url) || ""; }
+
+let otpIv;
+function renderBody() {
+  clearInterval(otpIv);
+  const body = $("#body"); if (!body) return;
+  if (view === "gen") return renderGen(body);
+  if (view === "health") return renderHealth(body);
+  if (view === "settings") return renderSettings(body);
+  if (view === "otp") return renderOtp(body);
+  body.innerHTML = `<div class="list"></div><div class="detail empty-d"></div>`;
+  const list = $(".list", body), items = filtered();
+  if (innerWidth <= 760) {
+    const chips = el("div", { className: "chips" });
+    [["all", "All"], ["fav", "Favorites"], ["login", "Logins"], ["card", "Cards"], ["note", "Notes"]].forEach(([id, l]) => { const c = el("button", { className: "chip" + (view === id && !folder ? " on" : "") }, l); c.onclick = () => go2(id); chips.appendChild(c); });
+    [...new Set(S.state.items.map((i) => i.folder).filter(Boolean))].sort().forEach((f) => { const c = el("button", { className: "chip" + (folder === f ? " on" : "") }, esc(f)); c.onclick = () => { view = "all"; folder = f; renderNav(); renderBody(); }; chips.appendChild(c); });
+    list.appendChild(chips);
+  }
+  if (!S.state.items.length) { list.insertAdjacentHTML("beforeend", `<div class="empty"><p><b>Your vault is empty.</b></p><p>Tap <b>New</b> to add a login, or import everything from NordPass.</p><button class="btn primary" id="imp">Import from NordPass</button></div>`); $("#imp", list).onclick = () => go2("settings", "import"); }
+  else if (!items.length) list.insertAdjacentHTML("beforeend", `<div class="empty">Nothing matches.</div>`);
+  items.forEach((i) => {
+    const r = el("div", { className: "it" + (sel === i.id ? " on" : "") }, `${avatar(i)}<div class="t"><b>${esc(i.name)} ${i.fav ? '<span class="star">★</span>' : ""}</b><span>${esc(subtitle(i))}</span></div>${i.totp ? `<span class="tag">2FA</span>` : ""}`);
+    r.onclick = () => { sel = i.id; list.querySelectorAll(".it").forEach((x) => x.classList.remove("on")); r.classList.add("on"); renderDetail(); };
+    list.appendChild(r);
+  });
+  renderDetail();
+}
+function renderDetail() {
+  clearInterval(otpIv);
+  const d = $(".detail"); if (!d) return;
+  const it = S.state.items.find((i) => i.id === sel);
+  d.classList.toggle("empty-d", !it);
+  if (!it) { d.innerHTML = innerWidth > 760 ? `<div class="empty">Select an item</div>` : ""; if (innerWidth > 760) d.classList.remove("empty-d"); return; }
+  const rows = [];
+  const row = (k, v, { secret, copyAs, link, mono = true } = {}) => rows.push(`<div class="r"><div><div class="k">${k}</div><div class="v" ${mono ? "" : 'style="font-family:var(--sans)"'} data-secret="${secret ? esc(v) : ""}">${secret ? "••••••••••" : esc(v).replace(/\n/g, "<br>")}</div></div>${secret ? `<button class="ib" data-reveal title="Show">${svg("eye")}</button>` : ""}${link ? `<button class="ib" data-open="${esc(link)}" title="Open site">${svg("open")}</button>` : ""}${copyAs ? `<button class="ib" data-copy="${esc(v)}" data-what="${copyAs}" title="Copy">${svg("copy")}</button>` : ""}</div>`);
+  if (it.type === "login") {
+    if (it.username) row("Username", it.username, { copyAs: "Username copied" });
+    if (it.password) row("Password", it.password, { secret: true, copyAs: "Password copied" });
+    if (it.url) row("Website", it.url, { link: /^[a-z]+:\/\//i.test(it.url) ? it.url : "https://" + it.url, copyAs: "Link copied" });
+  } else if (it.type === "card") {
+    if (it.cardholder) row("Name on card", it.cardholder, { copyAs: "Name copied", mono: false });
+    if (it.number) row("Card number", it.number, { secret: true, copyAs: "Card number copied" });
+    if (it.expiry) row("Expires", it.expiry, { copyAs: "Expiry copied" });
+    if (it.cvc) row("Security code", it.cvc, { secret: true, copyAs: "Security code copied" });
+    if (it.zip) row("ZIP / postal code", it.zip, { copyAs: "ZIP copied" });
+  }
+  const s = it.password ? strength(it.password) : null, reused = it.password && S.state.items.filter((x) => x.password === it.password).length > 1;
+  d.innerHTML = `<div class="row" style="margin-bottom:10px"><button class="ib back" id="bk">${svg("back")}</button><span style="flex:1"></span><button class="ib" id="fv" title="Favorite" style="${it.fav ? "color:var(--warn)" : ""}">${svg("star")}</button><button class="btn sm" id="ed">${svg("edit")} Edit</button></div>
+    <div class="dhead">${avatar(it)}<div><h1>${esc(it.name)}</h1><div class="row" style="gap:6px">${it.folder ? `<span class="tag">${esc(it.folder)}</span>` : ""}${s ? `<span class="tag ${s.score <= 1 ? "bad" : s.score === 2 ? "warn" : "good"}">${s.label}</span>` : ""}${reused ? '<span class="tag bad">Reused</span>' : ""}</div></div></div>
+    ${rows.length ? `<div class="fld">${rows.join("")}</div>` : ""}
+    ${it.totp ? `<div class="fld"><div class="r"><div><div class="k">2FA code</div><div class="code" id="code">······</div></div><svg class="ring" viewBox="0 0 36 36" id="ring"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--panel3)" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="var(--accent)" stroke-width="4" stroke-dasharray="94.2" stroke-dashoffset="0" transform="rotate(-90 18 18)"/></svg><button class="ib" id="cc" title="Copy code">${svg("copy")}</button></div></div>` : ""}
+    ${it.notes && it.type !== "note" ? `<div class="fld"><div class="r"><div><div class="k">Notes</div><div class="v" style="font-family:var(--sans);white-space:pre-wrap">${esc(it.notes)}</div></div></div></div>` : ""}
+    ${it.type === "note" ? `<div class="fld"><div class="r"><div><div class="v" style="font-family:var(--sans);white-space:pre-wrap">${esc(it.notes || "")}</div></div><button class="ib" data-copy="${esc(it.notes || "")}" data-what="Note copied">${svg("copy")}</button></div></div>` : ""}
+    ${it.passkeyNote ? `<div class="fld"><div class="r"><div><div class="k">Passkey</div><div class="v" style="font-family:var(--sans)">${esc(it.passkeyNote)}</div></div></div></div>` : ""}
+    ${(it.pwHistory || []).length ? `<details class="fld" style="padding:10px 12px"><summary class="small muted" style="cursor:pointer">Previous passwords (${it.pwHistory.length})</summary>${it.pwHistory.map((h) => `<div class="row" style="margin-top:8px"><span class="mono" style="flex:1;word-break:break-all">${esc(h.p)}</span><span class="small muted">${fmtDate(h.t)}</span></div>`).join("")}</details>` : ""}
+    <p class="small muted">Created ${fmtDate(it.created)} · Updated ${fmtDate(it.updated)}${it.type === "login" && it.pwChanged ? ` · Password changed ${fmtDate(it.pwChanged)}` : ""}</p>`;
+  d.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => copy(b.dataset.copy, b.dataset.what)));
+  d.querySelectorAll("[data-reveal]").forEach((b) => (b.onclick = () => { const v = b.parentElement.querySelector(".v"); v.textContent = v.textContent.startsWith("•") ? v.dataset.secret : "••••••••••"; }));
+  d.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => window.open(b.dataset.open, "_blank", "noopener,noreferrer")));
+  $("#bk", d).onclick = () => { sel = null; renderBody(); };
+  $("#ed", d).onclick = () => editItem(it);
+  $("#fv", d).onclick = () => { it.fav = !it.fav; it.updated = Date.now(); persist(); renderNav(); renderBody(); };
+  if (it.totp) {
+    const tick = async () => {
+      try { const o = parseOtp(it.totp), code = await totp(o), left = o.period - (Math.floor(Date.now() / 1000) % o.period);
+        const c = $("#code", d); if (!c) return clearInterval(otpIv); c.textContent = code.replace(/(\d{3})(\d+)/, "$1 $2"); c.dataset.code = code;
+        $("#ring", d).lastElementChild.setAttribute("stroke-dashoffset", String(94.2 * (1 - left / o.period))); }
+      catch (e) { $("#code", d).textContent = "Bad key"; }
+    };
+    tick(); otpIv = setInterval(tick, 1000);
+    $("#cc", d).onclick = () => copy($("#code", d).dataset.code || "", "Code copied");
+  }
+}
+
+// ---------- add / edit ----------
+function editItem(it) {
+  const isNew = !it; const cur = it ? JSON.parse(JSON.stringify(it)) : { type: view === "card" ? "card" : view === "note" ? "note" : "login", name: "", folder: folder || "" };
+  modal((c, close) => {
+    const folders = [...new Set(S.state.items.map((i) => i.folder).filter(Boolean))].sort();
+    c.innerHTML = `<h2>${isNew ? "New item" : "Edit item"}</h2>
+      ${isNew ? `<div class="chips" style="border:0;padding:0 0 12px">${[["login", "Login"], ["card", "Card"], ["note", "Secure note"]].map(([t, l]) => `<button class="chip${cur.type === t ? " on" : ""}" data-t="${t}">${l}</button>`).join("")}</div>` : ""}
+      <label class="f">Name<input class="in" id="n" value="${esc(cur.name)}" placeholder="e.g. Discord"></label>
+      <div id="tf"></div>
+      <label class="f">Folder<input class="in" id="fo" list="fl" value="${esc(cur.folder || "")}" placeholder="None"><datalist id="fl">${folders.map((f) => `<option value="${esc(f)}">`).join("")}</datalist></label>
+      <label class="f">Notes<textarea class="in" id="no">${esc(cur.notes || "")}</textarea></label>
+      <div class="err" id="e"></div>
+      <div class="row">${isNew ? "" : `<button class="btn danger" id="del">${svg("trash")} Delete</button>`}<span style="flex:1"></span><button class="btn" id="cx">Cancel</button><button class="btn primary" id="sv">Save</button></div>`;
+    const tf = $("#tf", c);
+    const paintType = () => {
+      if (cur.type === "login") {
+        tf.innerHTML = `<label class="f">Username or email<input class="in" id="u" value="${esc(cur.username || "")}" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+          <label class="f">Password<div class="pwrow"><input class="in" id="p" type="password" value="${esc(cur.password || "")}" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false"><button type="button" class="ib" data-eye="p" title="Show">${svg("eye")}</button><button type="button" class="ib" id="gp" title="Generate">${svg("dice")}</button></div><div id="pm"></div></label>
+          <label class="f">Website<input class="in" id="w" value="${esc(cur.url || "")}" placeholder="discord.com" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+          <label class="f">2FA setup key or otpauth:// link<div class="pwrow"><input class="in" id="ot" value="${esc(cur.totp || "")}" placeholder="From the site's 'can't scan the QR code?' option" autocapitalize="characters" autocorrect="off" spellcheck="false">${"BarcodeDetector" in window ? `<button type="button" class="ib" id="scan" title="Scan QR code">${svg("cam")}</button>` : ""}</div><span class="small" id="otm"></span></label>
+          <label class="f">Passkey note (optional)<input class="in" id="pkn" value="${esc(cur.passkeyNote || "")}" placeholder="e.g. Passkey saved in iCloud Keychain"></label>`;
+        const p = $("#p", tf), pm = () => ($("#pm", tf).innerHTML = meter(p.value)); p.oninput = pm; pm(); wireEyes(tf);
+        $("#gp", tf).onclick = () => { p.value = genPassword(prefs.gen || {}); p.type = "text"; pm(); };
+        const ot = $("#ot", tf), otm = async () => { const m = $("#otm", tf); if (!ot.value.trim()) return (m.textContent = ""); try { const code = await totp(parseOtp(ot.value)); m.innerHTML = `<span style="color:var(--good)">✓ Current code: ${code}</span>`; } catch (er) { m.innerHTML = `<span style="color:var(--bad)">${esc(er.message)}</span>`; } };
+        ot.oninput = otm; otm();
+        if ($("#scan", tf)) $("#scan", tf).onclick = () => scanQR((txt) => { ot.value = txt; otm(); try { const o = parseOtp(txt); if (!$("#n", c).value && o.issuer) $("#n", c).value = o.issuer; if (!$("#u", tf).value && o.account) $("#u", tf).value = o.account; } catch (e) {} });
+      } else if (cur.type === "card") {
+        tf.innerHTML = `<label class="f">Name on card<input class="in" id="ch" value="${esc(cur.cardholder || "")}"></label><label class="f">Card number<input class="in" id="cn" value="${esc(cur.number || "")}" inputmode="numeric" autocomplete="off"></label>
+          <div class="grid2"><label class="f">Expires (MM/YY)<input class="in" id="ex" value="${esc(cur.expiry || "")}" inputmode="numeric"></label><label class="f">Security code<input class="in" id="cv" value="${esc(cur.cvc || "")}" inputmode="numeric" autocomplete="off"></label></div>
+          <label class="f">ZIP / postal code<input class="in" id="zp" value="${esc(cur.zip || "")}"></label>`;
+      } else tf.innerHTML = "";
+    };
+    paintType();
+    c.querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { cur.type = b.dataset.t; c.querySelectorAll("[data-t]").forEach((x) => x.classList.toggle("on", x === b)); paintType(); }));
+    $("#cx", c).onclick = close;
+    if (!isNew) $("#del", c).onclick = () => { const b = $("#del", c); if (!b.dataset.sure) { b.dataset.sure = 1; b.innerHTML = "Tap again to delete"; return; } S.state.items = S.state.items.filter((x) => x.id !== it.id); S.state.tomb[it.id] = Date.now(); sel = null; persist(); close(); renderNav(); renderBody(); toast("Deleted"); };
+    $("#sv", c).onclick = () => {
+      const v = (id) => ($("#" + id, c) ? $("#" + id, c).value : ""), e = $("#e", c), now = Date.now();
+      const name = v("n").trim() || hostOf(v("w")) || "";
+      if (!name) return (e.textContent = "Give it a name.");
+      const out = Object.assign({}, it || { id: uid(), created: now, fav: false }, { type: cur.type, name, folder: v("fo").trim(), notes: v("no"), updated: now });
+      if (cur.type === "login") {
+        if (v("ot").trim()) { try { parseOtp(v("ot")); } catch (er) { return (e.textContent = "2FA key: " + er.message); } }
+        if (it && it.password && it.password !== v("p")) { out.pwHistory = [{ p: it.password, t: now }, ...(it.pwHistory || [])].slice(0, 5); out.pwChanged = now; }
+        if (!it || !it.password) out.pwChanged = now;
+        Object.assign(out, { username: v("u").trim(), password: v("p"), url: v("w").trim(), totp: v("ot").trim(), passkeyNote: v("pkn").trim() });
+      } else if (cur.type === "card") Object.assign(out, { cardholder: v("ch").trim(), number: v("cn").replace(/\s+/g, " ").trim(), expiry: v("ex").trim(), cvc: v("cv").trim(), zip: v("zp").trim() });
+      if (it) Object.assign(it, out); else S.state.items.push(out);
+      sel = out.id; persist(); close(); renderNav(); renderBody(); toast("Saved");
+    };
+    if (!matchMedia("(pointer:coarse)").matches) $("#n", c).focus();
+  });
+}
+function scanQR(done) {
+  modal(async (c, close) => {
+    c.innerHTML = `<h2>Scan the 2FA QR code</h2><video class="scan" playsinline muted></video><p class="small muted">Point the camera at the QR code on the site's 2FA setup page.</p><div class="row"><span style="flex:1"></span><button class="btn" id="cx">Cancel</button></div>`;
+    let stream, stop = false;
+    const end = () => { stop = true; stream && stream.getTracks().forEach((t) => t.stop()); close(); };
+    $("#cx", c).onclick = end;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const vid = $("video", c); vid.srcObject = stream; await vid.play();
+      const det = new BarcodeDetector({ formats: ["qr_code"] });
+      const loop = async () => { if (stop) return; try { const r = await det.detect(vid); const hit = r.find((x) => /^otpauth:/i.test(x.rawValue)); if (hit) { done(hit.rawValue); return end(); } } catch (e) {} requestAnimationFrame(loop); };
+      loop();
+    } catch (e) { c.querySelector("p").textContent = "Couldn't open the camera: " + e.message; }
+  });
+}
+
+// ---------- 2FA codes page ----------
+function renderOtp(body) {
+  const items = filtered();
+  body.innerHTML = `<div class="page"><h2>2FA codes</h2><p class="small muted">Tap a code to copy it. Add codes by editing a login and pasting the site's 2FA setup key.</p><div id="ol"></div></div>`;
+  const ol = $("#ol", body);
+  if (!items.length) { ol.innerHTML = `<div class="empty">No 2FA codes yet.</div>`; return; }
+  ol.innerHTML = items.map((i) => `<div class="fld" data-id="${i.id}" style="cursor:pointer"><div class="r">${avatar(i)}<div><div style="font-weight:600">${esc(i.name)}</div><div class="small muted">${esc(i.username || "")}</div></div><div class="code" style="font-size:24px">······</div><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--panel3)" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="var(--accent)" stroke-width="4" stroke-dasharray="94.2" transform="rotate(-90 18 18)"/></svg></div></div>`).join("");
+  ol.querySelectorAll("[data-id]").forEach((r) => (r.onclick = () => copy(r.dataset.code || "", "Code copied")));
+  const tick = async () => {
+    for (const r of ol.querySelectorAll("[data-id]")) {
+      const it = S.state.items.find((i) => i.id === r.dataset.id); if (!it) continue;
+      try { const o = parseOtp(it.totp), code = await totp(o), left = o.period - (Math.floor(Date.now() / 1000) % o.period);
+        r.dataset.code = code; $(".code", r).textContent = code.replace(/(\d{3})(\d+)/, "$1 $2"); $(".code", r).style.color = left <= 5 ? "var(--warn)" : "";
+        $(".ring", r).lastElementChild.setAttribute("stroke-dashoffset", String(94.2 * (1 - left / o.period))); } catch (e) { $(".code", r).textContent = "Bad key"; }
+    }
+  };
+  tick(); otpIv = setInterval(tick, 1000);
+}
+
+// ---------- generator ----------
+function renderGen(body) {
+  const g = prefs.gen = Object.assign({ mode: "chars", length: 20, lower: true, upper: true, digits: true, symbols: true, words: 5 }, prefs.gen || {});
+  body.innerHTML = `<div class="page"><div class="card"><h2>Password generator</h2><div class="gen" id="out"></div><div id="m"></div>
+    <div class="row" style="margin:12px 0"><button class="btn primary" id="cp">${svg("copy")} Copy</button><button class="btn" id="re">${svg("dice")} New one</button></div>
+    <div class="chips" style="border:0;padding:6px 0"><button class="chip" data-m="chars">Random characters</button><button class="chip" data-m="words">Words (easier to type)</button></div>
+    <div id="opt"></div></div></div>`;
+  const out = $("#out", body);
+  const gen = () => { out.textContent = g.mode === "words" ? genPassphrase(g.words) : genPassword(g); $("#m", body).innerHTML = meter(out.textContent); savePrefs(); };
+  const paintOpt = () => {
+    body.querySelectorAll("[data-m]").forEach((b) => b.classList.toggle("on", b.dataset.m === g.mode));
+    $("#opt", body).innerHTML = g.mode === "words" ? `<label class="f">Words: <b id="lv">${g.words}</b><input type="range" min="3" max="10" value="${g.words}" id="ln"></label>`
+      : `<label class="f">Length: <b id="lv">${g.length}</b><input type="range" min="8" max="64" value="${g.length}" id="ln"></label>${["lower", "upper", "digits", "symbols"].map((k) => `<label class="row" style="margin:8px 0"><input type="checkbox" data-k="${k}" ${g[k] ? "checked" : ""}> ${{ lower: "Lowercase (a-z)", upper: "Uppercase (A-Z)", digits: "Numbers (0-9)", symbols: "Symbols (!@#…)" }[k]}</label>`).join("")}`;
+    $("#ln", body).oninput = (e) => { g[g.mode === "words" ? "words" : "length"] = +e.target.value; $("#lv", body).textContent = e.target.value; gen(); };
+    body.querySelectorAll("[data-k]").forEach((b) => (b.onchange = () => { g[b.dataset.k] = b.checked; if (!["lower", "upper", "digits", "symbols"].some((k) => g[k])) { g[b.dataset.k] = b.checked = true; } gen(); }));
+  };
+  body.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => { g.mode = b.dataset.m; paintOpt(); gen(); }));
+  $("#cp", body).onclick = () => copy(out.textContent, "Password copied"); $("#re", body).onclick = gen;
+  paintOpt(); gen();
+}
+
+// ---------- health ----------
+function healthReport() {
+  const logins = S.state.items.filter((i) => i.type === "login" && i.password), byPw = {};
+  logins.forEach((i) => (byPw[i.password] = (byPw[i.password] || 0) + 1));
+  const YEAR = 365 * 864e5;
+  return { logins, weak: logins.filter((i) => strength(i.password).score <= 1), reused: logins.filter((i) => byPw[i.password] > 1), old: logins.filter((i) => Date.now() - (i.pwChanged || i.created || 0) > YEAR), no2fa: logins.filter((i) => !i.totp), breached: logins.filter((i) => (S.state.breach || {})[i.id] > 0) };
+}
+function renderHealth(body) {
+  const h = healthReport(), score = h.logins.length ? Math.round(100 * (1 - (h.weak.length + h.reused.length + h.breached.length) / (3 * h.logins.length))) : 100;
+  body.innerHTML = `<div class="page"><h2>Password health</h2><div class="statgrid">${[["Health score", score + "%"], ["Weak", h.weak.length], ["Reused", h.reused.length], ["Found in breaches", S.state.breachChecked ? h.breached.length : "—"], ["Over a year old", h.old.length], ["Without 2FA", h.no2fa.length]].map(([k, v]) => `<div class="card stat"><span class="small muted">${k}</span><b>${v}</b></div>`).join("")}</div>
+    <div class="card"><h2>Breach check</h2><p class="small muted">Checks each password against Have I Been Pwned's list of leaked passwords. Only the first 5 characters of a scrambled (hashed) version of each password leave your device — never the password itself.</p><button class="btn primary" id="bc">Check ${h.logins.length} passwords</button> <span class="small muted" id="bs">${S.state.breachChecked ? "Last checked " + fmtDate(S.state.breachChecked) : ""}</span></div>
+    <div id="hl"></div></div>`;
+  const section = (title, list, why) => { if (!list.length) return; const c = el("div", { className: "card" }, `<h2>${title} (${list.length})</h2><p class="small muted">${why}</p>`); list.forEach((i) => { const r = el("div", { className: "it", style: "border:0;padding:8px 0" }, `${avatar(i)}<div class="t"><b>${esc(i.name)}</b><span>${esc(i.username || hostOf(i.url))}</span></div>`); r.onclick = () => { view = "all"; folder = null; sel = i.id; query = ""; $("#q").value = ""; renderNav(); renderBody(); }; c.appendChild(r); }); $("#hl", body).appendChild(c); };
+  section("Found in breaches", h.breached, "These passwords appeared in real data leaks. Change them first.");
+  section("Reused", h.reused, "If one site leaks, the others are exposed too. Give each its own password.");
+  section("Weak", h.weak, "Short or predictable. Use the generator for a strong one.");
+  section("Over a year old", h.old, "Worth refreshing, especially for email and banking.");
+  $("#bc", body).onclick = async () => {
+    const b = $("#bc", body), st = $("#bs", body); b.disabled = true; S.state.breach = {}; let n = 0, hit = 0;
+    for (const i of h.logins) { try { const c = await breachCount(i.password); if (c) { S.state.breach[i.id] = c; hit++; } } catch (e) { st.textContent = "Couldn't reach the breach service."; b.disabled = false; return; } st.textContent = `Checked ${++n} of ${h.logins.length}…`; }
+    S.state.breachChecked = Date.now(); persist(false); toast(hit ? `${hit} password${hit > 1 ? "s were" : " was"} found in breaches` : "No breached passwords found"); renderHealth(body);
+  };
+}
+
+// ---------- settings ----------
+function renderSettings(body) {
+  const tabs = [["security", "Security"], ["sync", "Sync"], ["import", "Import"], ["backup", "Backup & export"], ["about", "About"]];
+  settingsTab = settingsTab || "security";
+  body.innerHTML = `<div class="page"><div class="chips" style="border:0;padding:0 0 12px">${tabs.map(([t, l]) => `<button class="chip${t === settingsTab ? " on" : ""}" data-s="${t}">${l}</button>`).join("")}</div><div id="sp"></div></div>`;
+  body.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { settingsTab = b.dataset.s; renderSettings(body); }));
+  ({ security: setSecurity, sync: setSync, import: setImport, backup: setBackup, about: setAbout })[settingsTab]($("#sp", body));
+}
+function setSecurity(p) {
+  const pkOk = passkeysPossible();
+  p.innerHTML = `<div class="card"><h2>Passkey unlock</h2><p class="small muted">Unlock with Face ID, Touch ID, your fingerprint or Windows Hello instead of typing your master password. Your master password still works as a backup.</p><div id="pks"></div>
+    ${pkOk ? `<button class="btn primary" id="apk">${svg("key")} Add a passkey on this device</button>` : `<p class="small" style="color:var(--warn)">Passkeys only work when Vault is opened from its web address (https), not from a saved file.</p>`}<div class="err" id="pe"></div></div>
+    <div class="card"><h2>Auto-lock</h2><div class="grid2"><label class="f">Lock after no activity<select class="in" id="al">${[[1, "1 minute"], [5, "5 minutes"], [15, "15 minutes"], [30, "30 minutes"], [60, "1 hour"], [0, "Never"]].map(([v, l]) => `<option value="${v}" ${+prefs.autolock === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+    <label class="f">Lock when the app is in the background for<select class="in" id="bl">${[[0.25, "15 seconds"], [1, "1 minute"], [2, "2 minutes"], [10, "10 minutes"], [0, "Don't"]].map(([v, l]) => `<option value="${v}" ${+prefs.bgLock === v ? "selected" : ""}>${l}</option>`).join("")}</select></label></div></div>
+    <div class="card"><h2>Change master password</h2>${pwField("Current master password", "c0")}${pwField("New master password", "c1")}<div id="cm"></div>${pwField("New password again", "c2")}<div class="err" id="ce"></div><button class="btn" id="cpw">Change password</button></div>
+    <div class="card"><h2>Appearance</h2><button class="btn" id="th">${prefs.theme === "light" ? "Dark mode" : "Light mode"}</button></div>`;
+  wireEyes(p);
+  const paintPk = () => { $("#pks", p).innerHTML = (FILE.pk || []).length ? FILE.pk.map((k) => `<div class="row" style="margin:6px 0"><span>${svg("key")}</span><span style="flex:1">${esc(k.label)} <span class="small muted">· added ${fmtDate(k.added)}</span></span><button class="btn sm danger" data-rm="${k.id}">Remove</button></div>`).join("") : `<p class="small muted">No passkeys yet.</p>`;
+    p.querySelectorAll("[data-rm]").forEach((b) => (b.onclick = async () => { writeFile(Object.assign({}, FILE, { pk: FILE.pk.filter((k) => k.id !== b.dataset.rm), hdrUpdated: Date.now() })); paintPk(); scheduleSync(); toast("Passkey removed"); })); };
+  paintPk();
+  if (pkOk) $("#apk", p).onclick = async () => {
+    const e = $("#pe", p); e.textContent = "";
+    const label = /iPhone|iPad/.test(navigator.userAgent) ? "iPhone" : /Android/.test(navigator.userAgent) ? "Android phone" : /Windows/.test(navigator.userAgent) ? "Windows PC" : /Mac/.test(navigator.userAgent) ? "Mac" : "This device";
+    try { await saveChain; const f = await addPasskey(FILE, S.vkRaw, label); f.hdrUpdated = Date.now(); writeFile(f); paintPk(); scheduleSync(); toast("Passkey added — you can unlock with it now"); }
+    catch (er) { e.textContent = er.name === "NotAllowedError" ? "Passkey setup was cancelled." : er.name === "InvalidStateError" ? "This device already has a Vault passkey." : er.message; }
+  };
+  $("#al", p).onchange = (e) => { prefs.autolock = +e.target.value; savePrefs(); armLock(); };
+  $("#bl", p).onchange = (e) => { prefs.bgLock = +e.target.value; savePrefs(); };
+  $("#c1", p).oninput = () => ($("#cm", p).innerHTML = meter($("#c1", p).value));
+  $("#cpw", p).onclick = async () => {
+    const e = $("#ce", p), a = $("#c0", p).value, n1 = $("#c1", p).value, n2 = $("#c2", p).value;
+    try { await unlockWithPassword(FILE, a); } catch (er) { return (e.textContent = "Current password is wrong."); }
+    if (n1.length < 10 || strength(n1).score < 2) return (e.textContent = "New password is too weak — use at least 10 characters, ideally a phrase.");
+    if (n1 !== n2) return (e.textContent = "New passwords don't match.");
+    await saveChain; const f = await changePassword(FILE, S.vkRaw, n1); f.hdrUpdated = Date.now(); writeFile(f); scheduleSync();
+    ["c0", "c1", "c2"].forEach((id) => ($("#" + id, p).value = "")); e.textContent = ""; toast("Master password changed");
+  };
+  $("#th", p).onclick = () => { const l = document.documentElement.classList.toggle("light"); prefs.theme = l ? "light" : "dark"; savePrefs(); $("#th", p).textContent = l ? "Dark mode" : "Light mode"; };
+}
+function setSync(p) {
+  const on = !!prefs.sync;
+  p.innerHTML = on ? `<div class="card"><h2>Sync is on</h2><p>Syncing with <b>${esc(prefs.sync.owner)}/${esc(prefs.sync.repo)}</b> (private). Last synced: ${prefs.lastSync ? new Date(prefs.lastSync).toLocaleString() : "never"}.</p><p class="small muted">Changes upload automatically a couple of seconds after you make them, and download when you unlock or come back to the app. Only the encrypted vault is stored on GitHub.</p><div class="row"><button class="btn primary" id="sn">${svg("sync")} Sync now</button><button class="btn danger" id="off">Turn off sync on this device</button></div><div class="err" id="e"></div></div>
+    <div class="card"><h2>Add another device</h2><ol class="steps"><li>On the other device, open this same Vault web address.</li><li>Choose <b>Connect to my synced vault</b>.</li><li>Enter <b>${esc(prefs.sync.owner)}</b>, <b>${esc(prefs.sync.repo)}</b>, your access token and your master password.</li></ol></div>`
+    : `<div class="card"><h2>Set up auto-sync</h2><p class="small muted">Your encrypted vault gets saved to a <b>private</b> GitHub repo that only you can see, so your PC and phone stay in sync. GitHub only ever sees scrambled data.</p>
+    <ol class="steps"><li>On GitHub, create a new repository named <b>vault-data</b> and set it to <b>Private</b>.</li><li>Go to GitHub → Settings → Developer settings → <b>Fine-grained tokens</b> → Generate new token. Under <b>Repository access</b> pick <b>Only select repositories → vault-data</b>, and under <b>Permissions → Contents</b> choose <b>Read and write</b>. Set an expiration you're comfortable with.</li><li>Copy the token and paste it below. It's stored on this device, encrypted with your vault.</li></ol>
+    <div class="grid2"><label class="f">GitHub username<input class="in" id="o" value="codyanay123411" autocapitalize="off" autocorrect="off" spellcheck="false"></label><label class="f">Private repo name<input class="in" id="r" value="vault-data" autocapitalize="off" autocorrect="off" spellcheck="false"></label></div>
+    ${pwField("Access token", "t", "", "github_pat_…")}<div class="err" id="e"></div><button class="btn primary" id="go">Turn on sync</button></div>`;
+  wireEyes(p);
+  if (on) {
+    $("#sn", p).onclick = async () => { await syncNow(true); setSync(p); };
+    $("#off", p).onclick = () => { delete prefs.sync; delete prefs.sha; delete prefs.lastSync; savePrefs(); paintSync(); setSync(p); toast("Sync turned off on this device"); };
+  } else $("#go", p).onclick = async () => {
+    const e = $("#e", p), cfg = { owner: $("#o", p).value.trim(), repo: $("#r", p).value.trim(), path: "vault.json", token: $("#t", p).value.trim() };
+    if (!cfg.owner || !cfg.repo || !cfg.token) return (e.textContent = "Fill in all three boxes.");
+    e.textContent = "Checking…";
+    try {
+      const { file } = await ghSync(cfg).get();
+      if (file) { try { await open_(S.vk, file.data); } catch (er) { throw new Error("That repo already holds a different vault. Use a new empty repo, or connect to it from the welcome screen."); } }
+      prefs.sync = { owner: cfg.owner, repo: cfg.repo, path: cfg.path, tokenBox: await seal(S.vk, enc.encode(cfg.token), "token") }; delete prefs.sha; savePrefs();
+      e.textContent = ""; await syncNow(true); setSync(p);
+    } catch (er) { e.textContent = er.message; }
+  };
+}
+function setImport(p) {
+  p.innerHTML = `<div class="card"><h2>Import from NordPass</h2><ol class="steps"><li>Open the <b>NordPass desktop app</b> (export isn't available on the phone app).</li><li>Go to <b>Settings → Export Items</b>, enter your master password, and save the <b>.csv</b> file.</li><li>Choose that file below. Nothing is uploaded — it's read right here on your device.</li><li>After importing, <b>delete the CSV file</b> (and empty the Recycle Bin): it holds all your passwords unencrypted.</li></ol>
+    <label class="f">NordPass (or Chrome / Bitwarden / 1Password) CSV file<input class="in" type="file" id="f" accept=".csv,text/csv"></label><div class="err" id="e"></div><div id="pv"></div>
+    <p class="small muted">NordPass doesn't include 2FA setup keys in its export. For accounts that used NordPass for 2FA codes, add the key again from each site's 2FA settings (Edit → 2FA setup key).</p></div>`;
+  $("#f", p).onchange = async (ev) => {
+    const f = ev.target.files[0], e = $("#e", p), pv = $("#pv", p); e.textContent = ""; pv.innerHTML = ""; if (!f) return;
+    let res; try { res = importCSV(await f.text()); } catch (er) { return (e.textContent = er.message); }
+    const have = new Set(S.state.items.map(dupKey)), fresh = res.items.filter((i) => !have.has(dupKey(i))), dups = res.items.length - fresh.length;
+    const by = (t) => fresh.filter((i) => i.type === t).length;
+    pv.innerHTML = `<p><b>${fresh.length}</b> new item${fresh.length === 1 ? "" : "s"} ready: ${by("login")} logins, ${by("card")} cards, ${by("note")} notes${dups ? ` · ${dups} already in your vault (skipped)` : ""}${res.skipped.length ? ` · ${res.skipped.length} folder-name rows ignored` : ""}.</p>
+      <div style="overflow-x:auto;max-height:260px;margin-bottom:12px"><table class="prev"><tr><th>Name</th><th>Username</th><th>Folder</th><th>Type</th></tr>${fresh.slice(0, 50).map((i) => `<tr><td>${esc(i.name)}</td><td>${esc(i.username || "")}</td><td>${esc(i.folder || "")}</td><td>${i.type}</td></tr>`).join("")}</table>${fresh.length > 50 ? `<p class="small muted">…and ${fresh.length - 50} more</p>` : ""}</div>
+      <button class="btn primary" id="do" ${fresh.length ? "" : "disabled"}>Import ${fresh.length} items</button>`;
+    if (fresh.length) $("#do", p).onclick = () => { S.state.items.push(...fresh); persist(); renderNav(); ev.target.value = ""; pv.innerHTML = `<p style="color:var(--good)">✓ Imported ${fresh.length} items. Now delete the CSV file from your computer.</p>`; toast(`Imported ${fresh.length} items`); };
+  };
+}
+function setBackup(p) {
+  p.innerHTML = `<div class="card"><h2>Encrypted backup</h2><p class="small muted">Downloads your whole vault, still encrypted. It opens with your master password (from the welcome screen → Restore). Keep one somewhere safe, like a USB stick.</p><button class="btn primary" id="eb">Download encrypted backup</button></div>
+    <div class="card"><h2>Export as CSV (not encrypted)</h2><p class="small muted">For moving to another password manager. <b>Anyone who gets this file can read every password.</b> Delete it right after you use it.</p>${pwField("Master password to confirm", "cp")}<div class="err" id="e"></div><button class="btn danger" id="ec">Export unencrypted CSV</button></div>
+    <div class="card"><h2>Remove Vault from this device</h2><p class="small muted">Deletes the vault stored in this browser. Your synced copy and backups aren't touched.</p><button class="btn danger" id="rm">Remove from this device</button></div>`;
+  wireEyes(p);
+  const dl = (name, text, type) => { const a = el("a", { href: URL.createObjectURL(new Blob([text], { type })), download: name }); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); };
+  $("#eb", p).onclick = async () => { await saveChain; dl(`vault-backup-${new Date().toISOString().slice(0, 10)}.vault.json`, JSON.stringify(FILE), "application/json"); toast("Backup downloaded"); };
+  $("#ec", p).onclick = async () => { try { await unlockWithPassword(FILE, $("#cp", p).value); } catch (er) { return ($("#e", p).textContent = "Wrong master password."); } dl(`vault-export-${new Date().toISOString().slice(0, 10)}.csv`, exportCSV(S.state.items), "text/csv"); $("#cp", p).value = ""; $("#e", p).textContent = ""; toast("CSV exported — delete it after use"); };
+  $("#rm", p).onclick = () => { const b = $("#rm", p); if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = prefs.sync ? "Tap again — your synced copy stays on GitHub" : "Tap again — this can't be undone without a backup"; return; } localStorage.removeItem(LS_FILE); localStorage.removeItem(LS_PREFS); location.reload(); };
+}
+function setAbout(p) {
+  p.innerHTML = `<div class="card"><h2>How Vault protects you</h2><ul class="steps"><li>Everything is encrypted with <b>AES-256-GCM</b> using a random vault key.</li><li>Your master password is stretched with <b>PBKDF2-SHA256 (600,000 rounds)</b> to unlock that key, so guessing is slow.</li><li>Passkey unlock uses your device's secure hardware (WebAuthn PRF); the master password always works too.</li><li>Nothing is sent anywhere except the encrypted file to your own private GitHub repo (if sync is on) and the anonymous breach check (if you run it).</li><li>It locks itself after inactivity and clears copied passwords from the clipboard after 30 seconds.</li></ul><p class="small muted">Vault was built for you, not audited by a security firm. Keep an encrypted backup, and keep your NordPass account until you're comfortable.</p><button class="btn" id="st">Run self-test</button><div id="sto" class="small" style="margin-top:10px;white-space:pre-wrap"></div></div>`;
+  $("#st", p).onclick = async () => { $("#sto", p).textContent = "Running…"; const r = await selfTest(); $("#sto", p).innerHTML = `<b style="color:${r.fail ? "var(--bad)" : "var(--good)"}">${r.pass} passed, ${r.fail} failed</b>\n${esc(r.log.filter((l) => l.startsWith("✗")).join("\n"))}`; };
+}
+
+// ---------- sync ----------
+let syncT, syncing = null, syncState = "idle", syncErr = "";
+function paintSync() {
+  const d = $("#sd"); if (!d) return;
+  d.className = "syncdot " + (!prefs.sync ? "" : syncState === "busy" ? "busy" : syncState === "error" ? "bad" : "ok");
+  d.title = !prefs.sync ? "Sync is off — set it up in Settings" : syncState === "error" ? "Sync problem: " + syncErr : "Synced " + (prefs.lastSync ? new Date(prefs.lastSync).toLocaleTimeString() : "");
+  $(".label", d).textContent = !prefs.sync ? "Not synced" : syncState === "busy" ? "Syncing…" : syncState === "error" ? "Sync error" : "Synced";
+  d.style.cursor = "pointer";
+}
+function scheduleSync() { if (!prefs.sync) return; clearTimeout(syncT); syncT = setTimeout(() => syncNow(false), 1500); }
+async function syncNow(loud) {
+  if (!prefs.sync || !S) { if (loud && !prefs.sync) go2("settings", "sync"); return; }
+  if (syncing) return syncing;
+  syncing = (async () => {
+    syncState = "busy"; paintSync();
+    try {
+      await saveChain;
+      const token = dec.decode(await open_(S.vk, prefs.sync.tokenBox, "token")), gh = ghSync(Object.assign({}, prefs.sync, { token }));
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { file: remote, sha } = await gh.get();
+        let merged = S.state, header = FILE, remoteState = null;
+        if (remote) {
+          try { remoteState = JSON.parse(dec.decode(await open_(S.vk, remote.data))); } catch (e) { throw new Error("The synced file belongs to a different vault."); }
+          merged = mergeStates(S.state, remoteState);
+          if ((remote.hdrUpdated || 0) > (FILE.hdrUpdated || 0)) header = Object.assign({}, FILE, { kdf: remote.kdf, wpw: remote.wpw, pk: remote.pk, hdrUpdated: remote.hdrUpdated });
+        }
+        const localChanged = JSON.stringify(merged) !== JSON.stringify(S.state) || header !== FILE;
+        if (localChanged) { S.state = merged; writeFile(await sealState(header, S.vk, merged)); }
+        // upload only if GitHub is missing something we have
+        const sameData = remoteState && JSON.stringify(mergeStates(remoteState, merged)) === JSON.stringify(mergeStates(remoteState, remoteState));
+        const sameHdr = remote && JSON.stringify(rsKey(remote)) === JSON.stringify(rsKey(FILE)) && (remote.hdrUpdated || 0) === (FILE.hdrUpdated || 0);
+        if (remote && sameData && sameHdr) { prefs.sha = sha; break; }
+        const r = await gh.put(FILE, sha); if (r.conflict) continue;
+        prefs.sha = r.sha; break;
+      }
+      prefs.lastSync = Date.now(); savePrefs(); syncState = "ok"; syncErr = "";
+      if (view !== "settings") { renderNav(); if (!$(".modal")) { const keep = sel; renderBody(); sel = keep; } }
+      if (loud) toast("Synced");
+    } catch (e) { syncState = "error"; syncErr = e.message; if (loud) toast(e.message); }
+    paintSync(); syncing = null;
+  })();
+  return syncing;
+}
+const rsKey = (f) => ({ kdf: f.kdf, wpw: f.wpw, pk: f.pk });
+
+// ---------- self-test ----------
+async function selfTest() {
+  const log = []; let pass = 0, fail = 0;
+  const ok = (name, cond) => { if (cond) { pass++; log.push("✓ " + name); } else { fail++; log.push("✗ " + name); } };
+  try {
+    // RFC 6238 test vectors (SHA-1, 8 digits)
+    const sec = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"; // "12345678901234567890"
+    ok("TOTP RFC 6238 @59s", (await totp({ secret: sec, digits: 8, period: 30, algo: "SHA-1" }, 59000)) === "94287082");
+    ok("TOTP RFC 6238 @1111111109s", (await totp({ secret: sec, digits: 8, period: 30, algo: "SHA-1" }, 1111111109000)) === "07081804");
+    ok("TOTP RFC 6238 @2000000000s", (await totp({ secret: sec, digits: 8, period: 30, algo: "SHA-1" }, 2000000000000)) === "69279037");
+    const sec256 = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA"; // 32-byte seed
+    ok("TOTP SHA-256 vector", (await totp({ secret: sec256, digits: 8, period: 30, algo: "SHA-256" }, 59000)) === "46119246");
+    const o = parseOtp("otpauth://totp/Discord:cody%40mail.com?secret=JBSWY3DPEHPK3PXP&issuer=Discord");
+    ok("otpauth link parsed", o.issuer === "Discord" && o.account === "cody@mail.com" && o.digits === 6);
+    let bad = false; try { parseOtp("not a key!!"); } catch (e) { bad = true; } ok("bad 2FA key rejected", bad);
+    // crypto round trip with a fast KDF so the test is quick
+    const v = await createVault("correct horse battery staple");
+    const st2 = { items: [{ id: "a", name: "Test", password: "p@ss" }], tomb: {}, settings: {} };
+    const f2 = await sealState(v.file, v.vk, st2);
+    const u = await unlockWithPassword(f2, "correct horse battery staple");
+    ok("encrypt → decrypt round trip", u.state.items[0].password === "p@ss");
+    let wrong = false; try { await unlockWithPassword(f2, "wrong password"); } catch (e) { wrong = /Wrong/.test(e.message); } ok("wrong master password rejected", wrong);
+    const tampered = JSON.parse(JSON.stringify(f2)); const ct = unb64(tampered.data.ct); ct[5] ^= 1; tampered.data.ct = b64(ct);
+    let tam = false; try { await unlockWithPassword(tampered, "correct horse battery staple"); } catch (e) { tam = true; } ok("tampered vault detected", tam);
+    const f3 = await changePassword(f2, v.vkRaw, "a brand new long password");
+    ok("password change keeps data", (await unlockWithPassword(f3, "a brand new long password")).state.items[0].name === "Test");
+    ok("no plaintext in vault file", !JSON.stringify(f2).includes("p@ss") && !JSON.stringify(f2).includes("Test"));
+    // NordPass CSV, including a folder-name row, quotes, a multi-line note and a card
+    const csv = 'name,url,username,password,note,cardholdername,cardnumber,cvc,expirydate,zipcode,folder,full_name,phone_number,email,address1,address2,city,country,state\r\nGames,,,,,,,,,,,,,,,,,,\r\nDiscord,https://discord.com,cody@mail.com,"pa,ss""word",,,,,,,Games,,,,,,,,\r\nBank card,,,,"line1\nline2",CODY A,4111 1111 1111 1111,123,12/29,84101,,,,,,,,,\r\nWifi,,,,router is behind TV,,,,,,Home,,,,,,,,\r\n';
+    const im = importCSV(csv);
+    ok("NordPass CSV: 3 items, folder row skipped", im.items.length === 3 && im.skipped.length === 1);
+    const dc = im.items.find((i) => i.name === "Discord");
+    ok("NordPass CSV: quotes & commas in password", dc && dc.password === 'pa,ss"word' && dc.folder === "Games" && dc.username === "cody@mail.com");
+    const cd = im.items.find((i) => i.type === "card");
+    ok("NordPass CSV: card fields", cd && cd.number === "4111 1111 1111 1111" && cd.cvc === "123" && cd.notes === "line1\nline2");
+    ok("NordPass CSV: secure note", im.items.some((i) => i.type === "note" && i.name === "Wifi"));
+    const chrome = importCSV("name,url,username,password,note\ngithub.com,https://github.com/login,cody,hunter2,\n");
+    ok("Chrome CSV import", chrome.items.length === 1 && chrome.items[0].password === "hunter2");
+    ok("CSV export round trip", importCSV(exportCSV(im.items)).items.length === 3);
+    // merge
+    const A = { items: [{ id: "1", name: "old", updated: 1 }, { id: "2", name: "keep", updated: 5 }], tomb: {} }, B = { items: [{ id: "1", name: "new", updated: 2 }, { id: "3", name: "added", updated: 3 }], tomb: { 2: 9 } };
+    const M = mergeStates(A, B);
+    ok("sync merge: newest edit wins, adds & deletes carry over", M.items.length === 2 && M.items.find((i) => i.id === "1").name === "new" && !M.items.find((i) => i.id === "2"));
+    ok("sync merge is symmetric", JSON.stringify(mergeStates(B, A).items.map((i) => i.id).sort()) === JSON.stringify(M.items.map((i) => i.id).sort()));
+    // generator & strength
+    const g = genPassword({ length: 24 });
+    ok("generator: length & every character type", g.length === 24 && /[a-z]/.test(g) && /[A-Z]/.test(g) && /\d/.test(g) && /[^a-zA-Z0-9]/.test(g));
+    ok("generator: no repeats across 200 runs", new Set(Array.from({ length: 200 }, () => genPassword({ length: 16 }))).size === 200);
+    ok("passphrase has 5 words", genPassphrase(5).split("-").length === 5);
+    ok("strength: weak vs strong", strength("password123").score <= 1 && strength(g).score >= 3);
+    ok("breach check uses k-anonymity (5-char prefix only)", await (async () => { let sent = ""; const n = await breachCount("password", async (url) => { sent = url; return { text: async () => "1E4C9B93F3F0682250B6CF8331B7EE68FD8:9659365\r\n" }; }); return sent.endsWith("/5BAA6") && n === 9659365; })());
+    // sync transport against a fake GitHub
+    const store = {}; let shaN = 0;
+    const fake = async (url, opt = {}) => { const key = url.split("?")[0]; if (!opt.method) { if (!store[key]) return { status: 404, ok: false }; return { status: 200, ok: true, json: async () => ({ content: store[key].c, sha: store[key].sha }) }; } const b = JSON.parse(opt.body); if (store[key] && b.sha !== store[key].sha) return { status: 409, ok: false }; store[key] = { c: b.content, sha: "s" + ++shaN }; return { status: 200, ok: true, json: async () => ({ content: { sha: store[key].sha } }) }; };
+    const gh = ghSync({ owner: "me", repo: "vault-data", token: "x" }, fake);
+    ok("sync: empty repo reads as no file", (await gh.get()).file === null);
+    const p1 = await gh.put(f2, null); const back = await gh.get();
+    ok("sync: upload then download", back.sha === p1.sha && back.file.data.ct === f2.data.ct);
+    ok("sync: stale write is refused (no overwrite)", (await gh.put(f2, "stale")).conflict === true);
+  } catch (e) { fail++; log.push("✗ crashed: " + e.message); }
+  return { pass, fail, log };
+}
+
+// ---------- boot ----------
+FILE = loadFile();
+if (FILE) showUnlock(); else showWelcome();
+addEventListener("resize", () => { if (S && $("#body") && ["all", "fav", "login", "card", "note"].includes(view)) renderBody(); });
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
+</script>
+</body>
+</html>
