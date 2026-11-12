@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OmniCalc</title>
 <meta name="theme-color" content="#0e1014">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -236,6 +236,69 @@ label.f.wide{flex-basis:100%}
   .grid2{grid-template-columns:1fr !important}
   .geodiag{height:210px}
 }
+
+/* ---- first-launch layout picker ---- */
+.devpick{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.devpick .card{width:min(560px,100%);text-align:center;padding:26px 22px}
+.devpick h2{margin:10px 0 4px;font-size:22px}
+.dlogo{width:44px;height:44px;margin:0 auto;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:24px}
+.dopts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.dopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;color:var(--text)}
+.dopt:hover,.dopt.rec{border-color:var(--accent)}
+.dopt svg{width:42px;height:42px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round}
+.dopt b{font-size:17px}.dopt span{color:var(--muted);font-size:12.5px;line-height:1.4}.dopt i{font-style:normal;font-size:11.5px;color:var(--accent);font-weight:600}
+@media (max-width:420px){.dopts{grid-template-columns:1fr}}
+
+/* ---- phone layout ---- */
+#phonebar,#tabbar,.fntoggle{display:none}
+html.phone .app{flex-direction:column;height:100dvh}
+html.phone nav{display:none}
+html.phone #phonebar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+html.phone .pbtitle{font-size:18px;font-weight:650}
+html.phone .pbacts{display:flex;gap:6px}
+html.phone main{padding:12px 12px calc(84px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+html.phone #tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+html.phone #tabbar .tab{flex-direction:column;gap:3px;justify-content:center;align-items:center;padding:6px 0;font-size:11px;border-radius:12px;width:auto}
+html.phone #tabbar .tab svg{width:22px;height:22px}
+html.phone input,html.phone select,html.phone textarea,html.phone .in{font-size:16px}
+html.phone .btn,html.phone .iconbtn{min-height:42px;padding:9px 14px}
+html.phone .pill button{min-height:36px}
+html.phone .grid2,html.phone .calcwrap{grid-template-columns:1fr !important}
+html.phone .calcwrap .side{order:2}
+html.phone #expr{font-size:30px}
+html.phone .tape{min-height:0;height:auto;max-height:17dvh;flex:none}
+html.phone .display{min-height:0}
+html.phone .calcwrap>div:first-child{display:flex;flex-direction:column}
+html.phone .modebar .pill button{padding:6px 11px}
+html.phone .display{padding:12px 14px}
+html.phone .modebar{gap:6px}
+html.phone .modebar #clearHist,html.phone .modebar #copyRes{display:none}
+html.phone .fntoggle{display:inline-block}
+html.phone .pads{grid-template-columns:1fr}
+html.phone .pads .pad.sci{display:none}
+html.phone .pads.showsci .pad.sci{display:grid}
+html.phone .k{height:min(58px,7.4dvh);min-height:46px;font-size:18px;border-radius:14px}
+html.phone .k.n{font-size:22px}
+html.phone .k.eq{font-size:24px}
+html.phone .pad.sci .k{height:46px;font-size:15px}
+html.phone .calcwrap.kbmode .pads{display:none}
+html.phone .graphwrap{grid-template-columns:1fr;height:auto}
+html.phone .graphwrap .canvaswrap{height:55vh}
+html.phone .tab kbd{display:none}
+html.phone .studyq{font-size:20px}
+html.phone .card{padding:14px}
+html.phone table{display:block;overflow-x:auto}
+html.phone .geodiag{height:210px}
+/* "More" sheet */
+.moresheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}
+.moresheet .sheet{width:100%;max-height:85dvh;overflow:auto;background:var(--panel);border-radius:18px 18px 0 0;padding:8px 14px calc(18px + env(safe-area-inset-bottom))}
+.grabber{width:40px;height:5px;border-radius:3px;background:var(--panel3);margin:4px auto 6px}
+.mgroup{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin:14px 2px 8px}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mitem{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12px}
+.mitem.on{border-color:var(--accent);color:var(--accent)}
+.mitem svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mrow{display:flex;flex-wrap:wrap;gap:8px}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:10px;border:2px solid var(--panel)}
 </style>
@@ -1751,9 +1814,10 @@ function show(id) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.v === id));
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "v-" + id));
   if (inits[id] && !inits[id].done) { inits[id].done = true; inits[id](); }
-  if (id === "calc") $("expr").focus();
+  if (id === "calc" && !isPhone()) $("expr").focus();
   if (id === "graph") requestAnimationFrame(drawGraph);
-  if (id === "prog") $("pExpr").focus();
+  if (id === "prog" && !isPhone()) $("pExpr").focus();
+  afterShow(id);
   store.tab = id; save();
 }
 document.addEventListener("keydown", (e) => {
@@ -5226,6 +5290,113 @@ const STUDY = (() => {
 })();
 
 // =====================================================================
+// LAYOUT: PC (sidebar) or Phone (top bar + bottom tab bar, big touch keys).
+// Picked on first launch; switchable any time. Stored per device, not in the synced data.
+// =====================================================================
+const DEVICE_KEY = "omnicalc.device";
+const PHONE_TABS = ["calc", "graph", "conv", "study"]; // bottom bar; everything else is under "More"
+let phoneKb = false; // phone: show the system keyboard in the calculator instead of the on-screen pad
+const getDevice = () => { try { return localStorage.getItem(DEVICE_KEY); } catch (e) { return null; } };
+const isPhone = () => document.documentElement.classList.contains("phone");
+const looksLikePhone = () => (matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 820) || innerWidth < 720;
+
+// --- phone chrome ---
+const phoneBar = el("header", { id: "phonebar" }, `<div class="pbtitle"></div><div class="pbacts"></div>`);
+const tabBar = el("div", { id: "tabbar" });
+PHONE_TABS.forEach((id) => {
+  const label = TABS.find((t) => t[0] === id)[1];
+  const b = el("button", { className: "tab btab" }, `<svg viewBox="0 0 24 24">${ICON[id]}</svg><span>${id === "calc" ? "Calc" : id === "conv" ? "Convert" : label}</span>`);
+  b.dataset.v = id; b.onclick = () => show(id); tabBar.appendChild(b);
+});
+const moreBtn = el("button", { className: "tab btab more" }, `<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span>`);
+moreBtn.onclick = () => openMore();
+tabBar.appendChild(moreBtn);
+document.querySelector(".app").prepend(phoneBar);
+document.body.appendChild(tabBar);
+
+function openMore() {
+  if (document.querySelector(".moresheet")) return;
+  const ov = el("div", { className: "moresheet" }), sh = el("div", { className: "sheet" });
+  let group = "";
+  sh.appendChild(el("div", { className: "grabber" }));
+  TABS.forEach(([id, label, g]) => {
+    if (g && g !== group) { group = g; sh.appendChild(el("div", { className: "mgroup" }, g)); sh.appendChild(el("div", { className: "mgrid" })); }
+    const b = el("button", { className: "mitem" + (id === curView ? " on" : "") }, `<svg viewBox="0 0 24 24">${ICON[id]}</svg><span>${label}</span>`);
+    b.onclick = () => { close(); show(id); };
+    sh.lastChild.appendChild(b);
+  });
+  sh.appendChild(el("div", { className: "mgroup" }, "Settings"));
+  const row = el("div", { className: "mrow" });
+  const th = el("button", { className: "btn" }, document.documentElement.classList.contains("light") ? "Dark mode" : "Light mode");
+  th.onclick = () => { themeBtn.click(); th.textContent = document.documentElement.classList.contains("light") ? "Dark mode" : "Light mode"; };
+  const pc = el("button", { className: "btn" }, "Switch to PC layout");
+  pc.onclick = () => { close(); setDevice("pc"); };
+  const st = el("button", { className: "btn" }, "Self-test");
+  st.onclick = () => { close(); testBtn.click(); };
+  row.append(th, pc, st); sh.appendChild(row);
+  ov.appendChild(sh); document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+}
+
+function paintPhoneBar(id = curView) {
+  const t = TABS.find((x) => x[0] === id);
+  phoneBar.querySelector(".pbtitle").textContent = t ? t[1] : "OmniCalc";
+  moreBtn.classList.toggle("active", !!id && !PHONE_TABS.includes(id));
+  const acts = phoneBar.querySelector(".pbacts"); acts.innerHTML = "";
+  if (id === "calc") {
+    const kb = el("button", { className: "iconbtn", title: "Use the phone keyboard" }, phoneKb ? "Keypad" : "Keyboard");
+    kb.onclick = () => { phoneKb = !phoneKb; applyCalcInput(); paintPhoneBar(); exprEl.blur(); if (phoneKb) exprEl.focus(); };
+    acts.appendChild(kb);
+  }
+}
+function applyCalcInput() {
+  // On a phone the on-screen keypad does the typing, so keep the system keyboard from covering it.
+  exprEl.inputMode = isPhone() && !phoneKb ? "none" : "text";
+  document.querySelector(".calcwrap").classList.toggle("kbmode", isPhone() && phoneKb);
+}
+function afterShow(id) { if (isPhone()) { paintPhoneBar(id); main.scrollTop = 0; } }
+
+// sci functions toggle (phone only — the PC layout always shows both pads)
+const fnToggle = el("button", { className: "iconbtn fntoggle" });
+const paintFn = () => { const on = !!store.phoneSci; document.querySelector(".pads").classList.toggle("showsci", on); fnToggle.textContent = on ? "Hide functions" : "Functions"; };
+fnToggle.onclick = () => { store.phoneSci = !store.phoneSci; save(); paintFn(); };
+document.querySelector(".modebar").prepend(fnToggle);
+paintFn();
+
+const main = document.querySelector("main");
+function setDevice(mode, remember = true) {
+  if (remember) { try { localStorage.setItem(DEVICE_KEY, mode); } catch (e) {} }
+  document.documentElement.classList.toggle("phone", mode === "phone");
+  phoneSwitch.textContent = mode === "phone" ? "PC layout" : "Phone layout";
+  applyCalcInput();
+  if (mode === "phone") paintPhoneBar();
+  if (curView === "graph") requestAnimationFrame(drawGraph);
+}
+const phoneSwitch = el("button", { className: "iconbtn", title: "Switch between the PC and phone layouts" }, "Phone layout");
+phoneSwitch.onclick = () => setDevice(isPhone() ? "pc" : "phone");
+foot.insertBefore(phoneSwitch, foot.children[1] || null);
+
+function askDevice() {
+  const rec = looksLikePhone() ? "phone" : "pc";
+  const ov = el("div", { className: "devpick" }), card = el("div", { className: "card" });
+  card.innerHTML = `<div class="dlogo">Σ</div><h2>Welcome to OmniCalc</h2><p class="muted">How are you using it? You can switch any time.</p><div class="dopts"></div>`;
+  [["pc", "PC", "Sidebar, keyboard shortcuts, everything side by side", '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>'],
+   ["phone", "Phone", "Big touch keys, bottom tab bar, one column", '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/>']].forEach(([m, name, desc, icon]) => {
+    const b = el("button", { className: "dopt" + (m === rec ? " rec" : "") }, `<svg viewBox="0 0 24 24">${icon}</svg><b>${name}</b><span>${desc}</span>${m === rec ? '<i>Recommended for this screen</i>' : ""}`);
+    b.dataset.m = m;
+    b.onclick = () => { ov.remove(); setDevice(m); };
+    card.querySelector(".dopts").appendChild(b);
+  });
+  ov.appendChild(card); document.body.appendChild(ov);
+}
+
+const savedDevice = getDevice();
+if (savedDevice) setDevice(savedDevice, false);
+else { setDevice(looksLikePhone() ? "phone" : "pc", false); askDevice(); }
+addEventListener("resize", () => { if (curView === "graph") requestAnimationFrame(drawGraph); });
+
+// =====================================================================
 // SELF-TEST (runs every mode inside this exact copy, then restores state)
 // =====================================================================
 async function runSelfTest() {
@@ -5405,6 +5576,26 @@ async function runSelfTest() {
     check("Study", "focus block logs minutes & starts break", S.FT.phase === "short" && (S.SD.days[Object.keys(S.SD.days).pop()].min - before) === S.ftLen("work") / 60e3, true);
     S.ftReset(); S.FT.done = 0;
     store.study = JSON.parse(snapStudy); Object.assign(S.SD, store.study); S.setMode("practice");
+  });
+
+  // ---- layout ----
+  await run("Layout", async () => {
+    const wasPhone = isPhone(), view0 = curView;
+    setDevice("phone", false); show("calc"); await tick();
+    check("Layout", "phone mode on", isPhone() && getComputedStyle($("tabbar")).display !== "none" && getComputedStyle($("nav")).display === "none", true);
+    check("Layout", "phone hides system keyboard on calc", exprEl.inputMode, "none");
+    check("Layout", "top bar title", document.querySelector("#phonebar .pbtitle").textContent, "Calculator");
+    openMore(); await tick();
+    const items = document.querySelectorAll(".moresheet .mitem");
+    check("Layout", "More sheet lists every tool", items.length, TABS.length);
+    [...items].find((b) => b.textContent === "Rifle").click(); await tick();
+    check("Layout", "More → Rifle opens it", curView === "rifle" && !document.querySelector(".moresheet") && document.querySelector("#phonebar .pbtitle").textContent === "Rifle", true);
+    check("Layout", "More tab highlighted for tools under More", document.querySelector("#tabbar .more").classList.contains("active"), true);
+    document.querySelector('#tabbar .tab[data-v="study"]').click(); await tick();
+    check("Layout", "bottom bar → Study", curView, "study");
+    setDevice("pc", false); await tick();
+    check("Layout", "PC mode restores sidebar", !isPhone() && getComputedStyle($("nav")).display !== "none" && exprEl.inputMode === "text", true);
+    setDevice(wasPhone ? "phone" : "pc", false); show(view0);
   });
 
   // ---- matrix ----
