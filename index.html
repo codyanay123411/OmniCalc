@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OmniCalc</title>
+<meta name="theme-color" content="#0e1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OmniCalc">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235b9cff'/%3E%3Cpath d='M18 22h12M24 16v12M36 22h12M18 42l10 10M28 42L18 52M36 44h12M36 50h12' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -5578,6 +5585,11 @@ foot.appendChild(testBtn);
 // ---------- start ----------
 show(TABS.some((t) => t[0] === store.tab) || store.tab === "solve" ? store.tab : "calc");
 })();
+
+// Offline install on phones (iPhone "Add to Home Screen", Android "Install app") when served from a website.
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent/.test(location.hostname)) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 
 </script>
 </body>

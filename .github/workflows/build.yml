@@ -56,3 +56,26 @@ jobs:
           files: |
             dist/OmniCalc.apk
             dist/OmniCalc-Windows.zip
+
+  # Hosts the app at https://<user>.github.io/<repo>/ so iPhones (and anyone) can install it.
+  # One-time setup: repo Settings → Pages → Source: "GitHub Actions". Repo must be public on a free plan.
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect site files
+        run: |
+          mkdir site
+          cp -r index.html manifest.webmanifest sw.js icons site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -13,11 +13,13 @@ Download from the latest **[Release](../../releases/latest)**:
 - **Android:** `OmniCalc.apk`, then open it on your phone. You may need to allow "install unknown apps" for your browser or Files app.
 - **Windows / Mac / Linux:** `OmniCalc-Windows.zip`. Extract it and double-click `OmniCalc.html`, or on Windows run `Install OmniCalc.cmd` for a Start-menu app.
 
-Or just download `index.html` and open it in any browser.
+- **iPhone / iPad:** open the web app link (repo **About** box → website, `https://codyanay123411.github.io/OmniCalc/`) in **Safari**, tap **Share → Add to Home Screen**. It gets its own icon, opens full-screen and works offline.
+- **Any browser:** the same link works on any device, or download `index.html` and open it.
 
 Everything runs on your device; nothing is sent anywhere. The **Self-test** button (bottom-left) checks every feature.
 
 ## Repo layout
 - `index.html`: the whole app.
 - `android/`: a small WebView wrapper. GitHub Actions copies `index.html` in and builds the APK on every push to `main` (see `.github/workflows/build.yml`).
+- `manifest.webmanifest`, `sw.js`, `icons/`: make the GitHub Pages site installable and offline (iPhone Add to Home Screen, Android/Chrome Install app).
 - `windows/`: install/uninstall and default-calculator scripts bundled into the Windows zip.
