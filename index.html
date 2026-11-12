@@ -299,6 +299,40 @@ html.phone .geodiag{height:210px}
 .mitem.on{border-color:var(--accent);color:var(--accent)}
 .mitem svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mrow{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ---- phone fixes ---- */
+.phoneonly{display:none}
+html.phone .phoneonly{display:inline}
+html.phone .pconly{display:none}
+html.phone button,html.phone input,html.phone select,html.phone textarea,html.phone canvas,html.phone .k,html.phone .tab,html.phone .mitem{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html.phone #graph{touch-action:none}
+html.phone .graphwrap .canvaswrap{order:-1}
+html.phone input.mm{min-height:38px}
+html.phone .linkbtn{min-height:38px;padding:8px 0}
+html.phone .row{flex-wrap:wrap}
+html.phone .card .row>.in:only-child,html.phone .shq{flex:1 1 100% !important;min-width:0}
+html.phone.typing #tabbar{display:none}
+html.phone.typing main{padding-bottom:16px}
+@media (hover:none){html.phone .k:hover{background:var(--panel)}html.phone .k.n:hover{background:var(--panel2)}html.phone .k.o:hover{background:var(--op-soft)}html.phone .k.eq:hover{background:var(--accent)}html.phone .btn:hover,html.phone .iconbtn:hover{border-color:var(--line)}}
+@media (max-height:500px) and (orientation:landscape){
+  html.phone #phonebar{padding:calc(4px + env(safe-area-inset-top)) 14px 4px}
+  html.phone .pbtitle{font-size:15px}
+  html.phone #phonebar .iconbtn{min-height:32px;padding:4px 10px}
+  html.phone #tabbar{padding:2px 4px calc(2px + env(safe-area-inset-bottom));left:env(safe-area-inset-left);right:env(safe-area-inset-right)}
+  html.phone #tabbar .tab{flex-direction:row;gap:6px;padding:6px 0}
+  html.phone #tabbar .tab svg{width:18px;height:18px}
+  html.phone main{padding:8px calc(10px + env(safe-area-inset-right)) 56px calc(10px + env(safe-area-inset-left))}
+  html.phone .tape{max-height:12dvh}
+  html.phone #expr{font-size:22px}
+  html.phone .k{height:36px;min-height:34px;font-size:16px}
+  html.phone .modebar{margin-top:6px}
+  html.phone .modebar .pill button,html.phone .modebar .iconbtn{min-height:30px;padding:3px 10px}
+  html.phone .display{padding:6px 12px}
+  html.phone .pads{margin-top:8px}
+  html.phone .k.n{font-size:18px}
+  html.phone .pad.num{grid-template-columns:repeat(8,1fr)}
+  html.phone .graphwrap .canvaswrap{height:72dvh}
+}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:10px;border:2px solid var(--panel)}
 </style>
@@ -354,7 +388,7 @@ html.phone .geodiag{height:210px}
       <div id="fnRows"></div>
       <div class="row small muted" style="margin-top:4px;gap:6px">t / θ from <input class="in mm" id="gT0"> to <input class="in mm" id="gT1"></div>
       <div id="gSliders"></div>
-      <p class="muted small" style="margin:10px 0 0;line-height:1.5">Pick a type for each row: functions, inequalities (shaded), polar r(θ) or parametric x(t); y(t). Any extra letter, like <code>a</code> in <code>a·x^2</code>, becomes a slider. Drag to pan, scroll to zoom, hover to trace. Graphs use radians.</p>
+      <p class="muted small" style="margin:10px 0 0;line-height:1.5">Pick a type for each row: functions, inequalities (shaded), polar r(θ) or parametric x(t); y(t). Any extra letter, like <code>a</code> in <code>a·x^2</code>, becomes a slider. <span class="pconly">Drag to pan, scroll to zoom, hover to trace.</span><span class="phoneonly">Drag to pan, pinch to zoom, touch the graph to trace.</span> Graphs use radians.</p>
       <p class="err small" id="gErr"></p>
     </div>
     <div class="canvaswrap">
@@ -2190,15 +2224,26 @@ inits.graph = () => {
   ["gT0", "gT1"].forEach((id) => { $(id).value = (store.gRange || {})[id] ?? (id === "gT0" ? "0" : "2pi"); $(id).oninput = () => { store.gRange = { gT0: $("gT0").value, gT1: $("gT1").value }; save(); drawGraph(); }; });
   compileGraph();
   new ResizeObserver(() => drawGraph()).observe(canvas);
-  let drag = null;
-  canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy }; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener("pointermove", (e) => {
-    const r = canvas.getBoundingClientRect();
-    if (drag) { view.cx = drag.cx - (e.clientX - drag.x) / view.s; view.cy = drag.cy + (e.clientY - drag.y) / view.s; }
-    hoverX = e.clientX - r.left; drawGraph();
+  let drag = null; const ptrs = new Map(); let pinch = null;
+  const rel = (e) => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  canvas.addEventListener("pointerdown", (e) => {
+    ptrs.set(e.pointerId, rel(e)); try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
+    if (ptrs.size === 2) { // two fingers: pinch to zoom around the midpoint
+      const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1 }; drag = null;
+    } else if (ptrs.size === 1) { drag = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy }; if (e.pointerType !== "mouse") { hoverX = rel(e)[0]; drawGraph(); } }
   });
-  canvas.addEventListener("pointerup", () => (drag = null));
-  canvas.addEventListener("pointerleave", () => { hoverX = null; drawGraph(); });
+  canvas.addEventListener("pointermove", (e) => {
+    if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, rel(e));
+    if (pinch && ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+      zoomAt(d / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); pinch.d = d; return;
+    }
+    if (drag) { view.cx = drag.cx - (e.clientX - drag.x) / view.s; view.cy = drag.cy + (e.clientY - drag.y) / view.s; }
+    hoverX = rel(e)[0]; drawGraph();
+  });
+  const up = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) drag = null; else if (ptrs.size === 1 && !pinch) { const [q] = ptrs.values(); const r = canvas.getBoundingClientRect(); drag = { x: q[0] + r.left, y: q[1] + r.top, cx: view.cx, cy: view.cy }; } };
+  canvas.addEventListener("pointerup", up); canvas.addEventListener("pointercancel", up);
+  canvas.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { hoverX = null; drawGraph(); } });
   canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
     const r = canvas.getBoundingClientRect();
@@ -5071,7 +5116,8 @@ const STUDY = (() => {
     const newProblem = () => {
       SD.cfg.ptopic = ts.value; SD.cfg.plevel = ls.value; save();
       cur = make(ts.value, ls.value); answered = false;
-      qEl.innerHTML = cur.q; inp.value = ""; fb.innerHTML = ""; stepsEl.innerHTML = ""; inp.focus(); paintSide();
+      const hadFocus = document.activeElement === inp;
+      qEl.innerHTML = cur.q; inp.value = ""; fb.innerHTML = ""; stepsEl.innerHTML = ""; if (hadFocus || !isPhone()) inp.focus(); paintSide();
     };
     const check = () => {
       if (answered) return newProblem();
@@ -5294,6 +5340,7 @@ const STUDY = (() => {
 // Picked on first launch; switchable any time. Stored per device, not in the synced data.
 // =====================================================================
 const DEVICE_KEY = "omnicalc.device";
+const editable = (e) => !!e && (e.tagName === "TEXTAREA" || (e.tagName === "INPUT" && !/^(button|checkbox|radio|range|color|file|submit)$/i.test(e.type)) || e.isContentEditable);
 const PHONE_TABS = ["calc", "graph", "conv", "study"]; // bottom bar; everything else is under "More"
 let phoneKb = false; // phone: show the system keyboard in the calculator instead of the on-screen pad
 const getDevice = () => { try { return localStorage.getItem(DEVICE_KEY); } catch (e) { return null; } };
@@ -5355,7 +5402,13 @@ function applyCalcInput() {
   exprEl.inputMode = isPhone() && !phoneKb ? "none" : "text";
   document.querySelector(".calcwrap").classList.toggle("kbmode", isPhone() && phoneKb);
 }
-function afterShow(id) { if (isPhone()) { paintPhoneBar(id); main.scrollTop = 0; } }
+let afterShow = function (id) {
+  // a field in the tool you just left can keep focus (and the keyboard/hidden tab bar) after it's hidden
+  const a = document.activeElement, v = $("v-" + id);
+  if (a && a !== document.body && v && !v.contains(a)) a.blur();
+  if (!editable(document.activeElement)) document.documentElement.classList.remove("typing");
+  if (isPhone()) { paintPhoneBar(id); main.scrollTop = 0; }
+};
 
 // sci functions toggle (phone only — the PC layout always shows both pads)
 const fnToggle = el("button", { className: "iconbtn fntoggle" });
@@ -5395,6 +5448,37 @@ const savedDevice = getDevice();
 if (savedDevice) setDevice(savedDevice, false);
 else { setDevice(looksLikePhone() ? "phone" : "pc", false); askDevice(); }
 addEventListener("resize", () => { if (curView === "graph") requestAnimationFrame(drawGraph); });
+
+// --- phone behaviour fixes ---
+// Hide the bottom bar while the on-screen keyboard is up (it would ride above the keyboard and cover the field),
+// keep the field in view, and stop autocorrect/auto-capitals from mangling things like "pi" or "sqrt".
+document.addEventListener("focusin", (ev) => {
+  const t = ev.target; if (!editable(t)) return;
+  t.setAttribute("autocapitalize", "off"); t.setAttribute("autocorrect", "off"); t.spellcheck = false;
+  if (!t.getAttribute("enterkeyhint")) t.setAttribute("enterkeyhint", t.id === "expr" ? "done" : "go");
+  if (!isPhone() || t.inputMode === "none") return;
+  document.documentElement.classList.add("typing");
+  setTimeout(() => { if (document.activeElement === t) t.scrollIntoView({ block: "center", behavior: "smooth" }); }, 350);
+});
+document.addEventListener("focusout", () => setTimeout(() => { if (!editable(document.activeElement) || document.activeElement.inputMode === "none") document.documentElement.classList.remove("typing"); }, 50));
+
+// Phones only allow sound after a tap, so unlock audio on the first touch; timer beeps then work later.
+const unlockAudio = () => { try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch (e) {} };
+addEventListener("pointerdown", unlockAudio, { capture: true });
+
+// Android back button / back gesture: step back through the tools you opened (and close the More sheet) instead of leaving the app.
+let popping = false;
+const prevAfterShow = afterShow;
+afterShow = function (id) {
+  prevAfterShow(id);
+  if (!popping && isPhone()) { try { history.pushState({ oc: id }, ""); } catch (e) {} }
+};
+addEventListener("popstate", (e) => {
+  const sheet = document.querySelector(".moresheet");
+  if (sheet) { sheet.remove(); try { history.pushState({ oc: curView }, ""); } catch (er) {} return; }
+  if (e.state && e.state.oc && e.state.oc !== curView) { popping = true; show(e.state.oc); popping = false; }
+});
+try { history.replaceState({ oc: store.tab || "calc" }, ""); } catch (e) {}
 
 // =====================================================================
 // SELF-TEST (runs every mode inside this exact copy, then restores state)
@@ -5581,6 +5665,7 @@ async function runSelfTest() {
   // ---- layout ----
   await run("Layout", async () => {
     const wasPhone = isPhone(), view0 = curView;
+    if (document.activeElement) document.activeElement.blur(); document.documentElement.classList.remove("typing");
     setDevice("phone", false); show("calc"); await tick();
     check("Layout", "phone mode on", isPhone() && getComputedStyle($("tabbar")).display !== "none" && getComputedStyle($("nav")).display === "none", true);
     check("Layout", "phone hides system keyboard on calc", exprEl.inputMode, "none");
